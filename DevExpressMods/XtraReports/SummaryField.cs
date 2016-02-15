@@ -253,7 +253,6 @@ namespace DevExpressMods.XtraReports
 
                     // Filter outside the list controller so that we can ascertain grouping for rows the override filter excludes
                     newListController.Initialize(
-                        ((SortedListController)originalBrowser.ListController).GetCalculatedFields(),
                         ((SortedListController)originalBrowser.ListController).GetOriginalGroupFields(),
                         ((SortedListController)originalBrowser.ListController).GetSortingSummary(),
                         null);
@@ -353,7 +352,6 @@ namespace DevExpressMods.XtraReports
                     unfilteredListController.SetList(browser.List);
                     unfilteredListController.SetBrowser(browser);
                     unfilteredListController.Initialize(
-                        ((SortedListController)browser.ListController).GetCalculatedFields(),
                         ((SortedListController)browser.ListController).GetOriginalGroupFields(),
                         ((SortedListController)browser.ListController).GetSortingSummary(),
                         GetFilterCriteria(report, OverrideFilter));

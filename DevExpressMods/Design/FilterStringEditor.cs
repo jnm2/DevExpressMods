@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Drawing.Design;
-using System.Linq;
 using System.Windows.Forms;
 using DevExpress.XtraPrinting.Native;
 using DevExpress.XtraReports.Design;
@@ -15,19 +14,17 @@ namespace DevExpressMods.Design
     {
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object objValue)
         {
-            if (provider != null)
+            if (provider != null && context != null)
             {
                 var serviceProvider = context.Container as IServiceProvider;
                 if (serviceProvider == null)
                 {
-                    var component = context.Instance as IComponent;
-                    if (component == null || component.Site == null) return objValue;
-                    serviceProvider = component.Site;
+                    var componentSite = (context.Instance as IComponent)?.Site;
+                    if (componentSite == null) return objValue;
+                    serviceProvider = componentSite;
                 }
-                var designerHost = (IDesignerHost)serviceProvider.GetService(typeof(IDesignerHost));
-                var control = designerHost.RootComponent as XRControl;
-                if (control == null) return objValue;
-                var rootReport = control.RootReport;
+
+                var rootReport = (DesignerExtensions.GetService<IDesignerHost>(serviceProvider).RootComponent as XRControl)?.RootReport;
                 if (rootReport == null) return objValue;
 
                 var dataContainer = context.Instance as IDataContainer;
@@ -47,9 +44,7 @@ namespace DevExpressMods.Design
 
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
         {
-            if ((context != null) && (context.Instance != null))
-                return UITypeEditorEditStyle.Modal;
-            return base.GetEditStyle(context);
+            return context?.Instance != null ? UITypeEditorEditStyle.Modal : base.GetEditStyle(context);
         }
     }
 }
