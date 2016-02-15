@@ -1,5 +1,7 @@
 About
 =====
+
+[![Join the chat at https://gitter.im/jnm2/DevExpressMods](https://badges.gitter.im/jnm2/DevExpressMods.svg)](https://gitter.im/jnm2/DevExpressMods?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 This project is a temporary stopgap for DevExpress's lack of support for complex summary calculations, seen here:
 https://www.devexpress.com/support/center/Question/Details/S133081
 
