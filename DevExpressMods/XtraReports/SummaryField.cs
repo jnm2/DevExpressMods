@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.Linq;
@@ -15,181 +14,417 @@ using DevExpressMods.Design;
 
 namespace DevExpressMods.XtraReports
 {
-    [DXDisplayName(typeof(SummaryField), "LocalizableNames", "Techsola.Controls.Reports.SummaryField", "Summary Field")]
+    [DXDisplayName(typeof(SummaryField), "LocalizableNames", "DevExpressMods.XtraReports.SummaryField", "Summary Field")]
     public class SummaryField : CalculatedField
     {
-        public SummaryField()
-        {
-            summary = new XRSummary();
-            summary.SetControl(new XRLabel());
-            base.GetValue += SummaryField_GetValue;
-        }
-
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        new public GetValueEventHandler GetValue;
+        public new GetValueEventHandler GetValue;
 
         private readonly XRSummary summary;
-        private static readonly Action<XRSummary, object, int> addValue = typeof(XRSummary).GetMethodDelegate<Action<XRSummary, object, int>>("AddValue");
-        private static readonly Action<XRSummary> reset = typeof(XRSummary).GetMethodDelegate<Action<XRSummary>>("Reset");
-        private static readonly Func<XRSummary, IEnumerable> get_ValuesInfo = typeof(XRSummary).GetMethodDelegate<Func<XRSummary, IEnumerable>>("get_ValuesInfo");
-        private static readonly Func<XtraReportBase, ReportDataContext> get_DataContext = typeof(XtraReportBase).GetMethodDelegate<Func<XtraReportBase, ReportDataContext>>("get_DataContext");
-  
         private int lastPosition = -1;
         private object lastCollection;
         private ExpressionEvaluator expressionEvaluator;
+        private ExpressionEvaluator overrideFilterEvaluator;
         private Band effectiveOwner;
         private CustomSortedListController unfilteredListController;
         private IList unfilteredListControllerList;
 
-        private class CustomSortedListController : SortedListController
+
+
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public new CalculatedFieldScripts Scripts => null;
+
+        [Category("Data"), DefaultValue(typeof(SummaryFunc), nameof(SummaryFunc.Sum))]
+        public SummaryFunc Func { get { return summary.Func; } set { summary.Func = value; } }
+
+        [Category("Data"), DefaultValue(false), DisplayName("Ignore Null Values")]
+        public bool IgnoreNullValues { get { return summary.IgnoreNullValues; } set { summary.IgnoreNullValues = value; } }
+
+        [Category("Data"), DefaultValue(null), TypeConverter(typeof(RunningBandConverter))]
+        public Band Running { get; set; }
+
+        [Category("Data"), DefaultValue(typeof(SummaryFieldMode), nameof(SummaryFieldMode.Immediate))]
+        public SummaryFieldMode Mode { get; set; }
+
+        [Category("Data"), DefaultValue(null), DisplayName("Override Filter"), Editor(typeof(FilterStringEditor), typeof(UITypeEditor))]
+        public string OverrideFilter
         {
-            public CustomSortedListController(ListBrowser listBrowser)
+            get { return overrideFilter; }
+            set
             {
-                this.SetBrowser(listBrowser);
-                this.SetList(listBrowser.List);
+                if (overrideFilter == value) return;
+                overrideFilter = value;
+                overrideFilterEvaluator = null;
             }
         }
 
+        public SummaryField()
+        {
+            summary = new XRSummary();
+            set_Control(summary, new XRLabel());
+            base.GetValue += SummaryField_GetValue;
+        }
+
+
+
+
+        private static readonly Action<XRSummary, object, int> addValue = typeof(XRSummary).GetMethodDelegate<Action<XRSummary, object, int>>("AddValue");
+        private static readonly Action<XRSummary> reset = typeof(XRSummary).GetMethodDelegate<Action<XRSummary>>("Reset");
+        private static readonly Func<XRSummary, IEnumerable> get_ValuesInfo = typeof(XRSummary).GetMethodDelegate<Func<XRSummary, IEnumerable>>("get_ValuesInfo");
+        private static readonly Func<XtraReportBase, ReportDataContext> get_DataContext = typeof(XtraReportBase).GetMethodDelegate<Func<XtraReportBase, ReportDataContext>>("get_DataContext");
         private static readonly Func<XtraReportBase, string, CriteriaOperator> GetFilterCriteria = typeof(XtraReportBase).GetMethodDelegate<Func<XtraReportBase, string, CriteriaOperator>>("GetFilterCriteria");
+        private static readonly Action<XRSummary, XRLabel> set_Control = typeof(XRSummary).GetMethodDelegate<Action<XRSummary, XRLabel>>("set_Control");
 
-        private static int GetImmediateGroupLevel(Band band)
+        private sealed class CustomSortedListController : SortedListController
         {
-            if (band == null) return -1;
-            var r = band as GroupBand;
-            if (r != null) return r.Level;
-            return band.Report.Bands.OfType<GroupBand>().Select(gb => gb.Level).DefaultIfEmpty(-1).Max();
-        }
-
-        private static object[] GetGroupRows(Band groupBand, ListBrowser groupDataBrowser, SortedListController groupListController)
-        {
-            var groupLevel = GetImmediateGroupLevel(groupBand);
-            if (groupLevel == -1) return null;
-
-            var groupDataController = groupListController.GetDataController();
-            var currentControllerIndex = groupListController.GetIndicesMapper()[groupDataBrowser.Position];
-
-            var rebasedGroupLevel = groupDataController.GroupInfo.LevelCount - groupLevel - 1;
-
-            var groupInfo = groupDataController.GroupInfo.FirstOrDefault(i => i.Level == rebasedGroupLevel && i.ContainsControllerRow(currentControllerIndex));
-            if (groupInfo == null) throw new Exception("This was unexpected for immediate mode. The summary field its running group have the same data member, but no group information is available.");
-
-            var r = new object[groupInfo.ChildControllerRowCount];
-
-            for (var i = 0; i < r.Length; i++)
-                r[i] = groupListController.GetItem(i);
-
-            return r;
-        }
-
-        void SummaryField_GetValue(object sender, GetValueEventArgs e)
-        {
-            if (effectiveOwner == null) Reset();
-
-            var dataContext = get_DataContext(e.Report);
-            var browser = (ListBrowser)dataContext.GetDataBrowser(this.DataSource ?? e.Report.DataSource, this.DataMember, true);
-
-            SortedListController listController;
-            if (this.OverrideFilter != null)
+            public new void SetList(IList list)
             {
-                if (unfilteredListController == null || unfilteredListControllerList != browser.List)
-                {
-                    unfilteredListControllerList = browser.List;
-                    unfilteredListController = new CustomSortedListController(browser);                    
-                    unfilteredListController.Initialize(
-                        ((SortedListController)browser.ListController).GetCalculatedFields(),
-                        ((SortedListController)browser.ListController).GetOriginalGroupFields(),
-                        ((SortedListController)browser.ListController).GetSortingSummary(),
-                        GetFilterCriteria(e.Report, this.OverrideFilter));
-                }
-                listController = unfilteredListController;
+                base.SetList(list);
             }
-            else 
-                listController = (SortedListController)browser.ListController;
+        }
 
-            if (this.Mode == SummaryFieldMode.Immediate)
+        private struct DataGroupInfo : IEquatable<DataGroupInfo>
+        {
+            public readonly object DataSource;
+            public readonly string DataMember;
+            public readonly ListBrowser ListBrowser;
+            public readonly IList List;
+            public readonly GroupRowInfo GroupRowInfo;
+
+            public DataGroupInfo(object dataSource, string dataMember, ListBrowser listBrowser, IList list, GroupRowInfo groupRowInfo)
             {
-                if (effectiveOwner == null)
+                if (dataSource == null) throw new ArgumentNullException(nameof(dataSource));
+                if (dataMember == null) throw new ArgumentNullException(nameof(dataMember));
+                ListBrowser = listBrowser;
+                List = list;
+                GroupRowInfo = groupRowInfo;
+                DataSource = dataSource;
+                DataMember = dataMember;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is DataGroupInfo && Equals((DataGroupInfo)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
                 {
-                    effectiveOwner = this.Running ?? e.Report;                    
-                    effectiveOwner.BeforePrint += effectiveOwner_BeforePrint;
+                    var hashCode = (uint)DataSource.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (uint)DataMember.GetHashCode();
+                    hashCode *= 397;
+                    if (GroupRowInfo != null) hashCode ^= (uint)GroupRowInfo.ChildControllerRow;
+                    hashCode *= 397;
+                    if (GroupRowInfo != null) hashCode ^= (uint)GroupRowInfo.ChildControllerRowCount;
+                    return (int)hashCode;
+                }
+            }
 
-                    if (expressionEvaluator == null)
-                        expressionEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(e.Report.Parameters, this, dataContext), CriteriaOperator.TryParse(this.Expression));
+            public bool Equals(DataGroupInfo other)
+            {
+                return DataSource.Equals(other.DataSource)
+                    && string.Equals(DataMember, other.DataMember)
+                    && other.List == List
+                    && (GroupRowInfo == null
+                        ? other.GroupRowInfo == null
+                        : GroupRowInfo.ChildControllerRow == other.GroupRowInfo.ChildControllerRow && GroupRowInfo.ChildControllerRowCount == other.GroupRowInfo.ChildControllerRowCount);
+            }
+        }
+
+        private DataGroupInfo? GetCurrentDataGroup(ReportDataContext dataContext, Band runningBand)
+        {
+            if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+            if (runningBand == null) throw new ArgumentNullException(nameof(runningBand));
+
+            var closestMember = runningBand as XtraReportBase ?? runningBand.GetParentBoundReportBand();
+            var browser = (ListBrowser)dataContext.GetDataBrowser(closestMember.DataSource, closestMember.DataMember, true);
+            if (browser == null) return null;
+
+            var groupBand = runningBand as GroupBand;
+            if (groupBand != null)
+            {
+                var groupRowLevel = DataGroupingUtils.GetGroupRowLevel((SortedListController)browser.ListController, groupBand.Level);
+                if (groupRowLevel != null)
+                {
+                    return new DataGroupInfo(
+                        closestMember.DataSource,
+                        closestMember.DataMember,
+                        browser,
+                        browser.List,
+                        DataGroupingUtils.GetGroupInfo(browser, groupRowLevel.Value, browser.Position));
+                }
+                runningBand = closestMember;
+            }
+
+            var detailBand = runningBand as XtraReportBase;
+            if (detailBand != null)
+            {
+                return new DataGroupInfo(closestMember.DataSource, closestMember.DataMember, browser, browser.List, null);
+            }
+
+            throw new InvalidOperationException($"Running band '{runningBand.Name}' cannot be used for immediate mode grouping. Calculated field {Name} must choose a {nameof(GroupBand)} or a {nameof(DetailReportBand)}.");
+        }
 
 
-                    var runningDataMember = (this.Running == null ? e.Report : this.Running.Report).DataMember;
-                    if (string.Equals(runningDataMember, this.DataMember, StringComparison.InvariantCultureIgnoreCase))
+
+
+        private DataGroupInfo? lastDataGroupInfo;
+        private bool isImmediateSummaryValid;
+        private object immediateSummary;
+        private string overrideFilter;
+
+        private bool ConvertOverrideFilterResult(object result)
+        {
+            if (result is bool) return (bool)result;
+            throw new EndUserConfigurationException($"Summary field {Name} has an invalid override filter because it returned a value other than boolean true or false.\r\rTry using comparison operators (=, !=, <, etc).");
+        }
+
+
+        void report_AfterPrint(object sender, EventArgs e)
+        {
+            var report = (XtraReport)sender;
+            report.AfterPrint -= report_AfterPrint;
+
+            // Force recreate on next get_summary because data Source may have changed (workaround for casting error)
+            expressionEvaluator = null;
+            overrideFilterEvaluator = null;
+
+            // This is important because changing parameters may affect summaries
+            isImmediateSummaryValid = false;
+        }
+
+        private object GetImmediateModeSummary(XtraReport report)
+        {
+            report.AfterPrint -= report_AfterPrint;
+            report.AfterPrint += report_AfterPrint;
+
+            var dataContext = get_DataContext(report);
+
+            if (expressionEvaluator == null)
+            {
+                isImmediateSummaryValid = false;
+                expressionEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(report.Parameters, this, dataContext), CriteriaOperator.TryParse(Expression));
+            }
+
+            var isOverridingFilter = !string.IsNullOrWhiteSpace(OverrideFilter);
+            if (isOverridingFilter && overrideFilterEvaluator == null)
+            {
+                isImmediateSummaryValid = false;
+                overrideFilterEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(report.Parameters, this, dataContext), CriteriaOperator.TryParse(OverrideFilter));
+            }
+
+
+            reset(summary);
+
+            var dg = GetCurrentDataGroup(dataContext, Running ?? report);
+
+            if (isImmediateSummaryValid && !dg.Equals(lastDataGroupInfo)) isImmediateSummaryValid = false;
+            lastDataGroupInfo = dg;
+
+            if (isImmediateSummaryValid) return immediateSummary;
+
+            if (dg != null)
+            {
+                if (dg.Value.DataSource != (DataSource ?? report.DataSource))
+                    throw new EndUserConfigurationException($"The running band on summary field {Name} does not have the same data Source as the summary field. Otherwise, it is not able to be correlated with the summary field.");
+                if (!DataMemberUtils.AreEqual(DataMember, dg.Value.DataMember) && (!DataMemberUtils.IsAncestor(dg.Value.DataMember, DataMember) || string.IsNullOrEmpty(dg.Value.DataMember)))
+                    throw new EndUserConfigurationException($"The running band on summary field {Name} must have the same data member or must be a parent data member. Otherwise, it is not able to be correlated with the summary field.");
+
+                var groupListBrowser = dg.Value.ListBrowser;
+                var childBrowsers = DataMemberUtils.GetChildBrowsers(dataContext, dg.Value.DataSource, dg.Value.DataMember, DataMember);
+
+                var groupStart = dg.Value.GroupRowInfo == null ? 0 : dg.Value.GroupRowInfo.ChildControllerRow;
+                var groupRowCount = dg.Value.GroupRowInfo == null ? groupListBrowser.Count : dg.Value.GroupRowInfo.ChildControllerRowCount;
+
+                if (isOverridingFilter)
+                {
+                    var originalBrowser = childBrowsers.Length == 0 ? groupListBrowser : childBrowsers[childBrowsers.Length - 1];
+                    var originalBrowserAsChild = originalBrowser as IRelatedDataBrowser;
+
+                    var newListController = new CustomSortedListController();
+                    newListController.SetList(originalBrowser.List);
+                    var newBrowser = originalBrowserAsChild != null
+                        ? (ListBrowser)new CustomRelatedListBrowser((DataBrowser)originalBrowserAsChild.Parent, originalBrowserAsChild.RelatedProperty, newListController, false)
+                        : new CustomListBrowser(originalBrowser.DataSource, newListController, false);
+                    ((IPropertiesContainer)newBrowser).SetCustomProperties(originalBrowser.GetItemProperties().OfType<CalculatedPropertyDescriptorBase>().Cast<PropertyDescriptor>().ToArray());
+                    newListController.SetBrowser(newBrowser);
+
+                    // Filter outside the list controller so that we can ascertain grouping for rows the override filter excludes
+                    newListController.Initialize(
+                        ((SortedListController)originalBrowser.ListController).GetCalculatedFields(),
+                        ((SortedListController)originalBrowser.ListController).GetOriginalGroupFields(),
+                        ((SortedListController)originalBrowser.ListController).GetSortingSummary(),
+                        null);
+
+                    if (childBrowsers.Length == 0)
                     {
-                        var groupRows = GetGroupRows(this.Running, browser, listController);
-                        if (groupRows != null)
+                        groupListBrowser = newBrowser;
+                        if (dg.Value.GroupRowInfo != null)
                         {
-                            for (var i = 0; i < groupRows.Length; i++)
-                                addValue(summary, expressionEvaluator.Evaluate(listController.GetItem(i)), i);
+                            var currentListSourceIndex = ((SortedListController)originalBrowser.ListController).GetDataController().GetListSourceRowIndex(originalBrowser.Position);
+                            var currentPositionNewBrowser = newListController.GetDataController().GetControllerRow(currentListSourceIndex);
+                            var newGroupInfo = DataGroupingUtils.GetGroupInfo(newBrowser, dg.Value.GroupRowInfo.Level, currentPositionNewBrowser);
+                            groupStart = newGroupInfo.ChildControllerRow;
+                            groupRowCount = newGroupInfo.ChildControllerRowCount;
                         }
                         else
                         {
-                            for (var i = 0; i < listController.Count; i++)
-                                addValue(summary, expressionEvaluator.Evaluate(listController.GetItem(i)), i);
+                            groupStart = 0;
+                            groupRowCount = newBrowser.Count;
                         }
                     }
                     else
                     {
-                        throw new InvalidOperationException("In immediate mode, you cannot pick a group running band unless its data member is the same as the summary field's data member.");
+                        childBrowsers[childBrowsers.Length - 1] = (RelatedListBrowser)newBrowser;
                     }
                 }
-            }
-            else
-            {
-                if (effectiveOwner == null)
-                {
-                    effectiveOwner = this.Running ?? e.Report;
-                    effectiveOwner.BeforePrint += effectiveOwner_BeforePrint;
 
-                    e.Report.BeforePrint -= Report_BeforePrint;
-                    e.Report.BeforePrint += Report_BeforePrint;
-                }
-                
-                var currentListSource = listController.GetDataController().ListSource;
-                if (lastCollection != currentListSource)
+                if (childBrowsers.Length == 0)
                 {
-                    lastPosition = -1;
-                    lastCollection = currentListSource;
-                }
-
-                int currentPosition;
-                if (listController == browser.ListController)
-                {
-                    currentPosition = browser.Position;
-                    if (currentPosition < lastPosition) // Charting doubles back
+                    for (var i = 0; i < groupRowCount; i++)
                     {
-                        lastPosition = -1;
-                        Reset();
+                        var currentRow = groupListBrowser.GetRow(i + groupStart);
+                        if (!isOverridingFilter || ConvertOverrideFilterResult(overrideFilterEvaluator.Evaluate(currentRow)))
+                            addValue(summary, expressionEvaluator.Evaluate(currentRow), i);
                     }
                 }
                 else
                 {
-                    currentPosition = -1;
-                    for (var i = 0; i < listController.Count; i++)
-                        if (listController.GetItem(i) == browser.Current)
-                        {
-                            currentPosition = i;
-                            break;
-                        }
-                }
+                    var state = dataContext.SaveState();
+                    try
+                    {
+                        groupListBrowser.Position = groupStart;
+                        var sampleIndex = 0;
+                        foreach (var childBrowser in childBrowsers) childBrowser.Position = 0;
 
-                while (lastPosition < currentPosition)
-                {
-                    lastPosition++;
-                    if (expressionEvaluator == null)
-                        expressionEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(e.Report.Parameters, this, dataContext), CriteriaOperator.TryParse(this.Expression));
-                    addValue(summary, expressionEvaluator.Evaluate(listController.GetItem(lastPosition)), lastPosition);
+                        while (true)
+                        {
+                            var currentIndex = childBrowsers.Length - 1;
+                            var currentBrowser = childBrowsers[currentIndex];
+                            if (!isOverridingFilter || ConvertOverrideFilterResult(overrideFilterEvaluator.Evaluate(currentBrowser.Current)))
+                                addValue(summary, expressionEvaluator.Evaluate(currentBrowser.Current), sampleIndex);
+                            sampleIndex++;
+
+                            while (currentIndex > 0 && currentBrowser.Position == currentBrowser.Count - 1)
+                            {
+                                currentBrowser.Position = 0;
+                                currentIndex--;
+                                currentBrowser = childBrowsers[currentIndex];
+                            }
+
+                            if (currentBrowser.Position == currentBrowser.Count - 1)
+                            {
+                                if (groupListBrowser.Position == groupStart + groupRowCount - 1) break;
+                                groupListBrowser.Position++;
+                            }
+                            else
+                                currentBrowser.Position++;
+                        }
+                    }
+                    finally
+                    {
+                        dataContext.LoadState(state);
+                    }
                 }
             }
 
-            if (!get_ValuesInfo(summary).Cast<Pair<object, int>>().Any(p => p.First != null))
-                e.Value = null;
+            immediateSummary = get_ValuesInfo(summary).Cast<Pair<object, int>>().All(p => p.First == null) ? null : summary.GetResult();
+            isImmediateSummaryValid = true;
+            return immediateSummary;
+        }
+
+        private object GetIncrementalModeSummary(XtraReport report)
+        {
+            if (effectiveOwner == null) Reset();
+
+            var dataContext = get_DataContext(report);
+            var browser = (ListBrowser)dataContext.GetDataBrowser(DataSource ?? report.DataSource, DataMember, false);
+            if (browser == null) return null;
+
+            SortedListController listController;
+            if (OverrideFilter != null)
+            {
+                if (unfilteredListController == null || unfilteredListControllerList != browser.List)
+                {
+                    unfilteredListControllerList = browser.List;
+                    unfilteredListController = new CustomSortedListController();
+                    unfilteredListController.SetList(browser.List);
+                    unfilteredListController.SetBrowser(browser);
+                    unfilteredListController.Initialize(
+                        ((SortedListController)browser.ListController).GetCalculatedFields(),
+                        ((SortedListController)browser.ListController).GetOriginalGroupFields(),
+                        ((SortedListController)browser.ListController).GetSortingSummary(),
+                        GetFilterCriteria(report, OverrideFilter));
+                }
+                listController = unfilteredListController;
+            }
             else
-                e.Value = summary.GetResult();
+                listController = (SortedListController)browser.ListController;
+
+
+            if (effectiveOwner == null)
+            {
+                effectiveOwner = Running ?? report;
+                effectiveOwner.BeforePrint += effectiveOwner_BeforePrint;
+
+                report.BeforePrint -= Report_BeforePrint;
+                report.BeforePrint += Report_BeforePrint;
+            }
+
+            var currentListSource = listController.GetDataController().ListSource;
+            if (lastCollection != currentListSource)
+            {
+                lastPosition = -1;
+                lastCollection = currentListSource;
+            }
+
+            int currentPosition;
+            if (listController == browser.ListController)
+            {
+                currentPosition = browser.Position;
+                if (currentPosition < lastPosition) // Charting doubles back
+                {
+                    lastPosition = -1;
+                    Reset();
+                }
+            }
+            else
+            {
+                currentPosition = -1;
+                for (var i = 0; i < listController.Count; i++)
+                    if (listController.GetItem(i) == browser.Current)
+                    {
+                        currentPosition = i;
+                        break;
+                    }
+            }
+
+            while (lastPosition < currentPosition)
+            {
+                lastPosition++;
+                if (expressionEvaluator == null)
+                    expressionEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(report.Parameters, this, dataContext), CriteriaOperator.TryParse(Expression));
+                addValue(summary, expressionEvaluator.Evaluate(listController.GetItem(lastPosition)), lastPosition);
+            }
+
+            return get_ValuesInfo(summary).Cast<Pair<object, int>>().All(p => p.First == null) ? null : summary.GetResult();
+        }
+
+        void SummaryField_GetValue(object sender, GetValueEventArgs e)
+        {
+            switch (Mode)
+            {
+                case SummaryFieldMode.Immediate:
+                    e.Value = GetImmediateModeSummary(e.Report);
+                    break;
+                case SummaryFieldMode.Incremental:
+                    e.Value = GetIncrementalModeSummary(e.Report);
+                    break;
+                default:
+                    throw new InvalidEnumValueException(Mode);
+            }
         }
 
         void Report_BeforePrint(object sender, EventArgs e)
@@ -202,6 +437,7 @@ namespace DevExpressMods.XtraReports
         void effectiveOwner_BeforePrint(object sender, EventArgs e)
         {
             expressionEvaluator = null;
+            overrideFilterEvaluator = null;
             effectiveOwner.BeforePrint -= effectiveOwner_BeforePrint;
             effectiveOwner = null;
         }
@@ -211,111 +447,6 @@ namespace DevExpressMods.XtraReports
             unfilteredListController = null;
             unfilteredListControllerList = null;
             reset(summary);
-        }
-
-
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        new public CalculatedFieldScripts Scripts { get { return null; } }
-
-        [Category("Data"), DefaultValue(typeof(SummaryFunc), "Sum")]
-        public SummaryFunc Func { get { return summary.Func; } set { summary.Func = value; } }
-
-        [Category("Data"), DefaultValue(false), DisplayName("Ignore Null Values")]
-        public bool IgnoreNullValues { get { return summary.IgnoreNullValues; } set { summary.IgnoreNullValues = value; } }
-
-        [Category("Data"), DefaultValue(null), TypeConverter(typeof(RunningBandConverter))]
-        public Band Running { get; set; }
-
-        [Category("Data"), DefaultValue(typeof(SummaryFieldMode), "Immediate")]
-        public SummaryFieldMode Mode { get; set; }
-
-        [Category("Data"), DefaultValue(null), DisplayName("Override Filter"), Editor(typeof(FilterStringEditor), typeof(UITypeEditor))]
-        public string OverrideFilter { get; set; }
-    }
-
-    public enum SummaryFieldMode
-    {
-        Immediate,
-        Incremental        
-    }
-
-    public class RunningBandConverter : ComponentConverter
-    {
-        public RunningBandConverter()
-            : base(typeof(Band))
-        {
-        }
-
-        public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
-        {
-            if (destinationType == typeof(string) && value == null)
-                return "(entire report)";
-
-            return base.ConvertTo(context, culture, value, destinationType);
-        }
-
-        public override bool GetPropertiesSupported(ITypeDescriptorContext context)
-        {
-            return false;
-        }
-
-        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
-        {
-            var baseValues = base.GetStandardValues(context);
-            var r = new List<Band>();
-            r.Add(null);
-
-            for (var i = 0; i < baseValues.Count; i++)
-            {
-                var value = (Band)baseValues[i];
-                if (value is GroupHeaderBand || value is DetailReportBand)
-                    r.Add(value);
-            }
-
-            return new StandardValuesCollection(r);
-        }
-    }
-
-    public static class ListControllerExtensions
-    {
-        private readonly static Func<SortedListController, ListSourceDataController> get_dataController = typeof(SortedListController).GetFieldGetter<Func<SortedListController, ListSourceDataController>>("dataController");
-        public static ListSourceDataController GetDataController(this SortedListController listController)
-        {
-            return get_dataController(listController);
-        }
-
-        private readonly static Func<SortedListController, RowIndicesMapper> get_IndicesMapper = typeof(SortedListController).GetMethodDelegate<Func<SortedListController, RowIndicesMapper>>("get_IndicesMapper");
-        public static RowIndicesMapper GetIndicesMapper(this SortedListController listController)
-        {
-            return get_IndicesMapper(listController);
-        }
-
-        private readonly static Func<SortedListController, CalculatedFieldCollection> get_calculatedFields = typeof(SortedListController).GetFieldGetter<Func<SortedListController, CalculatedFieldCollection>>("calculatedFields");
-        public static CalculatedFieldCollection GetCalculatedFields(this SortedListController listController)
-        {
-            return get_calculatedFields(listController);
-        }
-
-        private readonly static Func<SortedListController, GroupField[]> get_originalGroupFields = typeof(SortedListController).GetFieldGetter<Func<SortedListController, GroupField[]>>("originalGroupFields");
-        public static GroupField[] GetOriginalGroupFields(this SortedListController listController)
-        {
-            return get_originalGroupFields(listController);
-        }
-
-        private readonly static Func<SortedListController, XRGroupSortingSummary[]> get_sortingSummary = typeof(SortedListController).GetFieldGetter<Func<SortedListController, XRGroupSortingSummary[]>>("sortingSummary");
-        public static XRGroupSortingSummary[] GetSortingSummary(this SortedListController listController)
-        {
-            return get_sortingSummary(listController);
-        }
-    }
-
-    public static class XRSummaryExtensions
-    {
-        private static readonly Action<XRSummary, XRLabel> set_Control = typeof(XRSummary).GetMethodDelegate<Action<XRSummary, XRLabel>>("set_Control");
-
-        public static void SetControl(this XRSummary @this, XRLabel value)
-        {
-            set_Control(@this, value);
         }
     }
 }
