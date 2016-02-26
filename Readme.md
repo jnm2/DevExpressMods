@@ -1,3 +1,8 @@
+[![Join the chat at https://gitter.im/jnm2/DevExpressMods](https://badges.gitter.im/jnm2/DevExpressMods.svg)](https://gitter.im/jnm2/DevExpressMods?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+If anyone would like a release or NuGet package or needs something more specific from this code, please [add an issue](https://github.com/jnm2/DevExpressMods/issues) for me.
+
+
 About
 =====
 This project is a temporary stopgap for DevExpress's lack of support for complex summary calculations, seen here:
@@ -5,7 +10,7 @@ https://www.devexpress.com/support/center/Question/Details/S133081
 
 If DevExpress produces a solution in the future that covers all these use cases, this solution will be deprecated.
 
-This project is under the MIT license. See [LICENSE.txt](https://github.com/jnm2/DevExpressMods/blob/master/LICENSE.txt).
+This project is under the MIT license to maximize your freedom. See [LICENSE.txt](https://github.com/jnm2/DevExpressMods/blob/master/LICENSE.txt).
 
 
 
@@ -13,7 +18,7 @@ Getting Started
 ===============
 ModdedEndUserDesigner.cs shows how to use the feature.
 If you build this project and reference it in your software, you can drag ModdedEndUserDesigner from the toolbox instead of XRDesignMdiController.
-Or you can call SummaryFieldsFeature.Apply directly, if that is easier.
+Or you can call `SummaryFieldsFeature.Apply` directly, if that is easier.
 
 This will give you a new menu option in your end user designer fields list in window.
 Right click and select Add Summary Field (directly under Add Calculated Field):
@@ -54,7 +59,6 @@ Support
 This project is taken from code that has been in production for over a year with minor tweaks along the way.
 I wouldn't release it if it wasn't reliable; however it's possible that I overlooked a use case, so verify your reports carefully.
 
-If you find a bug, please report it via https://github.com/jnm2/DevExpressMods/issues.
-You are at the mercy of my free time and your ingenuity. That said, if you upload a runnable demo demonstrating the bug I will likely have it fixed in a day or two.
+If you find a bug, please report it via https://github.com/jnm2/DevExpressMods/issues. I will likely have it fixed in a day or two.
 
-If you are confused about how the feature works, I'm happy to get back to you as well. I'll update the documentation as needed.
+If you are confused about how the feature works, feel free to ask via [Gitter](https://gitter.im/jnm2/DevExpressMods) or the [issues](https://github.com/jnm2/DevExpressMods/issues) page. I'll update the documentation as needed.
