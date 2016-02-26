@@ -9,6 +9,7 @@ using DevExpress.Data.Filtering;
 using DevExpress.Data.Filtering.Helpers;
 using DevExpress.XtraPrinting.Native;
 using DevExpress.XtraReports.Native.Data;
+using DevExpress.XtraReports.Native.Parameters;
 using DevExpress.XtraReports.UI;
 using DevExpressMods.Design;
 
@@ -52,6 +53,7 @@ namespace DevExpressMods.XtraReports
             get { return overrideFilter; }
             set
             {
+                value = ParametersReplacer.UpgradeFilterString(value); // See XtraReportBase.FilterString
                 if (overrideFilter == value) return;
                 overrideFilter = value;
                 overrideFilterEvaluator = null;
@@ -205,14 +207,14 @@ namespace DevExpressMods.XtraReports
             if (expressionEvaluator == null)
             {
                 isImmediateSummaryValid = false;
-                expressionEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(report.Parameters, this, dataContext), CriteriaOperator.TryParse(Expression));
+                expressionEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(report.Parameters, this, dataContext), CriteriaOperator.Parse(Expression));
             }
 
             var isOverridingFilter = !string.IsNullOrWhiteSpace(OverrideFilter);
             if (isOverridingFilter && overrideFilterEvaluator == null)
             {
                 isImmediateSummaryValid = false;
-                overrideFilterEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(report.Parameters, this, dataContext), CriteriaOperator.TryParse(OverrideFilter));
+                overrideFilterEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(report.Parameters, this, dataContext), GetFilterCriteria(report, OverrideFilter));
             }
 
 
