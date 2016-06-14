@@ -288,7 +288,7 @@ namespace DevExpressMods.XtraReports
                     {
                         var currentRow = groupListBrowser.GetRow(i + groupStart);
                         if (!isOverridingFilter || ConvertOverrideFilterResult(overrideFilterEvaluator.Evaluate(currentRow)))
-                            addValue(summary, expressionEvaluator.Evaluate(currentRow), i);
+                            AddSummaryValue(expressionEvaluator.Evaluate(currentRow), i);
                     }
                 }
                 else
@@ -305,7 +305,7 @@ namespace DevExpressMods.XtraReports
                             var currentIndex = childBrowsers.Length - 1;
                             var currentBrowser = childBrowsers[currentIndex];
                             if (!isOverridingFilter || ConvertOverrideFilterResult(overrideFilterEvaluator.Evaluate(currentBrowser.Current)))
-                                addValue(summary, expressionEvaluator.Evaluate(currentBrowser.Current), sampleIndex);
+                                AddSummaryValue(expressionEvaluator.Evaluate(currentBrowser.Current), sampleIndex);
                             sampleIndex++;
 
                             while (currentIndex > 0 && currentBrowser.Position == currentBrowser.Count - 1)
@@ -406,10 +406,16 @@ namespace DevExpressMods.XtraReports
                 lastPosition++;
                 if (expressionEvaluator == null)
                     expressionEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(report.Parameters, this, dataContext), CriteriaOperator.TryParse(Expression));
-                addValue(summary, expressionEvaluator.Evaluate(listController.GetItem(lastPosition)), lastPosition);
+                AddSummaryValue(expressionEvaluator.Evaluate(listController.GetItem(lastPosition)), lastPosition);
             }
 
             return get_ValuesInfo(summary).Cast<Pair<object, int>>().All(p => p.First == null) ? null : summary.GetResult();
+        }
+
+        void AddSummaryValue(object value, int position)
+        {
+            if (IgnoreNullValues && (value ?? DBNull.Value) == DBNull.Value) return;
+            addValue(summary, value, position);
         }
 
         void SummaryField_GetValue(object sender, GetValueEventArgs e)
