@@ -1,12 +1,12 @@
 [![Join the chat at https://gitter.im/jnm2/DevExpressMods](https://badges.gitter.im/jnm2/DevExpressMods.svg)](https://gitter.im/jnm2/DevExpressMods?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-If anyone would like a release or NuGet package or needs something more specific from this code, please [add an issue](https://github.com/jnm2/DevExpressMods/issues) for me.
+I'm interested in feedback! Let me know what your needs are on [gitter](https://gitter.im/jnm2/DevExpressMods?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or [start a specific issue](https://github.com/jnm2/DevExpressMods/issues).
 
 
 About
 =====
 This project is a temporary stopgap for DevExpress's lack of support for complex summary calculations, seen here:
-https://www.devexpress.com/support/center/Question/Details/S133081
+[https://www.devexpress.com/support/center/Question/Details/S133081](https://www.devexpress.com/support/center/Question/Details/S133081)
 
 If DevExpress produces a solution in the future that covers all these use cases, this solution will be deprecated.
 
