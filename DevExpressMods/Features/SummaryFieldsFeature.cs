@@ -34,11 +34,17 @@ namespace DevExpressMods.Features
         {
             CustomFieldListImageProviderFeature.Instance.CustomColumnImageIndex -= CustomFieldListImageProviderFeature_CustomColumnImageIndex;
             CustomFieldListImageProviderFeature.Instance.CustomColumnImageIndex += CustomFieldListImageProviderFeature_CustomColumnImageIndex;
-            
+
             if (designMdiController.ActiveDesignPanel == null)
-                designMdiController.DesignPanelLoaded += designMdiController_DesignPanelLoaded;
-            else
-                RefreshFieldListImages(designDockManager);
+            {
+                DesignerLoadedEventHandler handler = null;
+                designMdiController.DesignPanelLoaded += handler = (s, e) =>
+                {
+                    designMdiController.DesignPanelLoaded -= handler;
+                    RefreshFieldListImages(designDockManager);
+                };
+            }
+            RefreshFieldListImages(designDockManager);
             
             MenuCreationServiceContainer.Get(designMdiController).Add(new SummaryFieldsMenuCreationService(designMdiController, designDockManager));
         }
@@ -49,14 +55,6 @@ namespace DevExpressMods.Features
             var containerComponent = e.Property as CalculatedPropertyDescriptorBase;
             if (containerComponent != null && ((IContainerComponent)containerComponent).Component is SummaryField)
                 e.Index = CustomFieldListImageProviderFeature.Instance.FieldListSumIndex;
-        }
-
-        static void designMdiController_DesignPanelLoaded(object sender, DesignerLoadedEventArgs e)
-        {
-            var designPanel = (XRDesignPanel)sender;
-            var designMdiController = designPanel.GetDesignMdiController();
-            designMdiController.DesignPanelLoaded -= designMdiController_DesignPanelLoaded;
-            RefreshFieldListImages(designMdiController.Container.Components.OfType<XRDesignDockManager>().First());
         }
 
         private static void RefreshFieldListImages(XRDesignDockManager designDockManager)
