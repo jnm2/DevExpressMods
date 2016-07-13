@@ -363,7 +363,8 @@ namespace DevExpressMods
                 CreateConstructorInternal(il, type.GetConstructor(new[] { typeof(T1), typeof(T2) }))
             );
         }
-        static void CreateConstructorInternal(ILGenerator il, ConstructorInfo constructor)
+
+        private static void CreateConstructorInternal(ILGenerator il, ConstructorInfo constructor)
         {
             var parameters = constructor.GetParameters();
             for (var i = 0; i < parameters.Length; i++)

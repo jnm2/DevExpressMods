@@ -100,6 +100,7 @@
     <Compile Include="Design\DesignerExtensions.cs" />
     <Compile Include="Design\FilterStringEditor.cs" />
     <Compile Include="Design\MenuCreationServiceContainer.cs" />
+    <Compile Include="Features\CustomColumnImageIndexEventArgs.cs" />
     <Compile Include="InvalidEnumValueException.cs" />
     <Compile Include="ModdedEndUserDesigner.cs">
       <SubType>Component</SubType>

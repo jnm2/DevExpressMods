@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DevExpress.XtraReports.UserDesigner;
 using DevExpressMods.Features;
 
@@ -18,17 +14,14 @@ namespace DevExpressMods
 
         public void EndInit()
         {
-            var dockManager = this.Container.Components.OfType<XRDesignDockManager>().First();
+            var dockManager = Container.Components.OfType<XRDesignDockManager>().First();
             SummaryFieldsFeature.Apply(this, dockManager);
         }    
 
         public ModdedEndUserDesigner()
-            : base()
         {
         }
-
-        public ModdedEndUserDesigner(IContainer container)
-            : base(container)
+        public ModdedEndUserDesigner(IContainer container) : base(container)
         {
         }
     }

@@ -184,7 +184,7 @@ namespace DevExpressMods.XtraReports
         }
 
 
-        void report_AfterPrint(object sender, EventArgs e)
+        private void report_AfterPrint(object sender, EventArgs e)
         {
             var report = (XtraReport)sender;
             report.AfterPrint -= report_AfterPrint;
@@ -412,13 +412,13 @@ namespace DevExpressMods.XtraReports
             return get_ValuesInfo(summary).Cast<Pair<object, int>>().All(p => p.First == null) ? null : summary.GetResult();
         }
 
-        void AddSummaryValue(object value, int position)
+        private void AddSummaryValue(object value, int position)
         {
             if (IgnoreNullValues && (value ?? DBNull.Value) == DBNull.Value) return;
             addValue(summary, value, position);
         }
 
-        void SummaryField_GetValue(object sender, GetValueEventArgs e)
+        private void SummaryField_GetValue(object sender, GetValueEventArgs e)
         {
             switch (Mode)
             {
@@ -433,14 +433,14 @@ namespace DevExpressMods.XtraReports
             }
         }
 
-        void Report_BeforePrint(object sender, EventArgs e)
+        private void Report_BeforePrint(object sender, EventArgs e)
         {
             lastPosition = -1;
             var report = (XRControl)sender;
             report.BeforePrint -= Report_BeforePrint;
         }
 
-        void effectiveOwner_BeforePrint(object sender, EventArgs e)
+        private void effectiveOwner_BeforePrint(object sender, EventArgs e)
         {
             expressionEvaluator = null;
             overrideFilterEvaluator = null;

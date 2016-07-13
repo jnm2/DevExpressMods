@@ -17,7 +17,7 @@ namespace DevExpressMods.Features
             }
         }
 
-        public class CustomFieldListImageProvider : IColumnImageProvider
+        public sealed class CustomFieldListImageProvider : IColumnImageProvider
         {
             private readonly IColumnImageProvider wrapped;
             public int FieldListSumIndex { get; private set; }
@@ -33,8 +33,8 @@ namespace DevExpressMods.Features
             public ImageCollection CreateImageCollection()
             {
                 var r = wrapped.CreateImageCollection();
-                this.FieldListSumIndex = r.Images.Count;
-                this.FieldListForeignKeyIndex = this.FieldListSumIndex + 1;
+                FieldListSumIndex = r.Images.Count;
+                FieldListForeignKeyIndex = FieldListSumIndex + 1;
                 r.AddImage(Properties.Resources.FieldListSum);
                 r.AddImage(Properties.Resources.FieldListForeignKey);
                 return r;

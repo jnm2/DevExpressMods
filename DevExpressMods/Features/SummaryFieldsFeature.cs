@@ -1,7 +1,5 @@
 ﻿using System;
-using System.ComponentModel;
 using System.ComponentModel.Design;
-using System.Linq;
 using DevExpress.Data.Browsing;
 using DevExpress.Data.Browsing.Design;
 using DevExpress.Services.Internal;
@@ -14,20 +12,6 @@ using DevExpressMods.XtraReports;
 
 namespace DevExpressMods.Features
 {
-    public class CustomColumnImageIndexEventArgs : EventArgs
-    {
-        public PropertyDescriptor Property { get; private set; }
-        public TypeSpecifics Specifics { get; private set; }
-        public int Index { get; set; }
-
-        public CustomColumnImageIndexEventArgs(PropertyDescriptor property, TypeSpecifics specifics, int index)
-        {
-            this.Property = property;
-            this.Specifics = specifics;
-            this.Index = index;
-        }
-    }
-
     public static class SummaryFieldsFeature
     {
         public static void Apply(XRDesignMdiController designMdiController, XRDesignDockManager designDockManager)
@@ -50,10 +34,9 @@ namespace DevExpressMods.Features
         }
 
 
-        static void CustomFieldListImageProviderFeature_CustomColumnImageIndex(object sender, CustomColumnImageIndexEventArgs e)
+        private static void CustomFieldListImageProviderFeature_CustomColumnImageIndex(object sender, CustomColumnImageIndexEventArgs e)
         {
-            var containerComponent = e.Property as CalculatedPropertyDescriptorBase;
-            if (containerComponent != null && ((IContainerComponent)containerComponent).Component is SummaryField)
+            if (((IContainerComponent)(e.Property as CalculatedPropertyDescriptorBase))?.Component is SummaryField)
                 e.Index = CustomFieldListImageProviderFeature.Instance.FieldListSumIndex;
         }
 
@@ -65,7 +48,7 @@ namespace DevExpressMods.Features
 
         public static readonly CommandID AddSummaryFieldCommand = new CommandID(Guid.NewGuid(), 0);
 
-        private class SummaryFieldsMenuCreationService : IMenuCreationService
+        private sealed class SummaryFieldsMenuCreationService : IMenuCreationService
         {
             private readonly XRDesignMdiController designMdiController;
             private readonly XRDesignDockManager designDockManager;
@@ -76,13 +59,10 @@ namespace DevExpressMods.Features
                 this.designDockManager = designDockManager;
             }
 
-            public MenuCommandDescription[] GetCustomMenuCommands()
+            public MenuCommandDescription[] GetCustomMenuCommands() => new[]
             {
-                return new[]
-                {
-                    new MenuCommandDescription(AddSummaryFieldCommand, OnHandleAddSummaryField, OnStatusAddSummaryField)
-                };
-            }
+                new MenuCommandDescription(AddSummaryFieldCommand, OnHandleAddSummaryField, OnStatusAddSummaryField)
+            };
 
             private void OnHandleAddSummaryField(object sender, CommandExecuteEventArgs e)
             {
@@ -99,7 +79,7 @@ namespace DevExpressMods.Features
 
                 // Functionality patterned after AddCalculatedField() from DevExpress.XtraReports.Design.Commands.FieldListCommandExecutor, DevExpress.XtraReports.v14.1.Extensions.dll, Version=14.1.5.0 
                 var c = new SummaryField { DataSource = node.DataSource != report.DataSource ? node.DataSource : null, DataMember = node.DataMember ?? string.Empty };
-                var description = string.Format("Add {0} object", typeof(SummaryField).Name);
+                var description = $"Add {typeof(SummaryField).Name} object";
                 var transaction = designerHost.CreateTransaction(description);
                 try
                 {
@@ -116,9 +96,9 @@ namespace DevExpressMods.Features
                 selectionServ.SetSelectedComponents(new[] { c });
             }
 
-            private void OnStatusAddSummaryField(object sender, EventArgs e)
+            private static void OnStatusAddSummaryField(object sender, EventArgs e)
             {
-                var command = sender as MenuCommand;
+                var command = (MenuCommand)sender;
                 command.Supported = command.Enabled = true;
             }
 
@@ -139,7 +119,7 @@ namespace DevExpressMods.Features
         private readonly static Func<FieldListDockPanel, XRDesignFieldList> get_fieldList = typeof(FieldListDockPanel).GetFieldGetter<Func<FieldListDockPanel, XRDesignFieldList>>("fieldList");
         public static XRDesignFieldList GetFieldList(this FieldListDockPanel @this)
         {
-            return get_fieldList(@this);
+            return get_fieldList(@this.GetFieldList());
         }
     }
 }
