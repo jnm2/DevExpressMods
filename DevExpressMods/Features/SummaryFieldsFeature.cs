@@ -34,12 +34,12 @@ namespace DevExpressMods.Features
         {
             CustomFieldListImageProviderFeature.Instance.CustomColumnImageIndex -= CustomFieldListImageProviderFeature_CustomColumnImageIndex;
             CustomFieldListImageProviderFeature.Instance.CustomColumnImageIndex += CustomFieldListImageProviderFeature_CustomColumnImageIndex;
-
+            
             if (designMdiController.ActiveDesignPanel == null)
                 designMdiController.DesignPanelLoaded += designMdiController_DesignPanelLoaded;
             else
                 RefreshFieldListImages(designDockManager);
-
+            
             MenuCreationServiceContainer.Get(designMdiController).Add(new SummaryFieldsMenuCreationService(designMdiController, designDockManager));
         }
 
@@ -58,11 +58,14 @@ namespace DevExpressMods.Features
             designMdiController.DesignPanelLoaded -= designMdiController_DesignPanelLoaded;
             RefreshFieldListImages(designMdiController.Container.Components.OfType<XRDesignDockManager>().First());
         }
-        
+
         private static void RefreshFieldListImages(XRDesignDockManager designDockManager)
         {
             ((FieldListDockPanel)designDockManager[DesignDockPanelType.FieldList]).GetFieldList().StateImageList = ColumnImageProvider.Instance.CreateImageCollection();
         }
+
+
+        public static readonly CommandID AddSummaryFieldCommand = new CommandID(Guid.NewGuid(), 0);
 
         private class SummaryFieldsMenuCreationService : IMenuCreationService
         {
@@ -73,15 +76,13 @@ namespace DevExpressMods.Features
             {
                 this.designMdiController = designMdiController;
                 this.designDockManager = designDockManager;
-                addSummaryFieldCommand = new CommandID(Guid.NewGuid(), 0);
             }
 
-            readonly CommandID addSummaryFieldCommand;
             public MenuCommandDescription[] GetCustomMenuCommands()
             {
                 return new[]
                 {
-                    new MenuCommandDescription(addSummaryFieldCommand, OnHandleAddSummaryField, OnStatusAddSummaryField)
+                    new MenuCommandDescription(AddSummaryFieldCommand, OnHandleAddSummaryField, OnStatusAddSummaryField)
                 };
             }
 
@@ -129,7 +130,7 @@ namespace DevExpressMods.Features
                 {
                     var index = items.IndexOf(FieldListCommands.AddCalculatedField);
                     if (index != -1)
-                        items.Insert(index + 1, new MenuItemDescription("Add Summary Field", null, addSummaryFieldCommand));
+                        items.Insert(index + 1, new MenuItemDescription("Add Summary Field", null, AddSummaryFieldCommand));
                 }
             }
         }

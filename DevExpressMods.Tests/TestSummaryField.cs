@@ -10,28 +10,6 @@ namespace DevExpressMods.Tests
     [TestFixture]
     public class TestSummaryField
     {
-        private sealed class TestDataSource
-        {
-            public TestDataSource(IReadOnlyCollection<TestDataSourceItem> items)
-            {
-                Items = items;
-            }
-
-            public IReadOnlyCollection<TestDataSourceItem> Items { get; }
-        }
-
-        private struct TestDataSourceItem
-        {
-            public TestDataSourceItem(string name, double value)
-            {
-                Name = name;
-                Value = value;
-            }
-
-            public string Name { get; }
-            public double Value { get; }
-        }
-
         [Test]
         public void TestImmediateModeSimple()
         {
