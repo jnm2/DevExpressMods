@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -7,6 +8,7 @@ using DevExpress.XtraReports.Design;
 using DevExpress.XtraReports.Native;
 using DevExpress.XtraReports.UI;
 using DevExpress.XtraReports.UserDesigner;
+using DevExpressMods.Design;
 using DevExpressMods.Features;
 using DevExpressMods.XtraReports;
 using NUnit.Framework;
@@ -46,6 +48,40 @@ namespace DevExpressMods.Tests
 
                 return (MenuItemDescriptionCollection)typeof(DataSourceNativeTreeList).GetMethod("CreateMenuItems", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(fieldList,
                     new[] { fieldList.PickManager.FindDataMemberNode(fieldList.Nodes, dataSource, dataMember) });
+            }
+        }
+
+
+        [Test, Apartment(ApartmentState.STA)]
+        public void Add_summary_field_should_have_effect_on_ribbon_designer()
+        {
+            AssertAddSummaryFieldCommandWorks(typeof(TestDataSource), nameof(TestDataSource.Items), true);
+        }
+
+
+        [Test, Apartment(ApartmentState.STA)]
+        public void Add_summary_field_should_have_effect_on_old_designer()
+        {
+            AssertAddSummaryFieldCommandWorks(typeof(TestDataSource), nameof(TestDataSource.Items), false);
+        }
+
+        private static void AssertAddSummaryFieldCommandWorks(Type dataSourceType, string dataMember, bool ribbonForm)
+        {
+            var dataSource = new BindingSource { DataSource = dataSourceType };
+            using (var tool = new ReportDesignTool(new XtraReport { DataSource = dataSource }))
+            {
+                var form = ribbonForm ? tool.DesignRibbonForm : tool.DesignForm;
+                SummaryFieldsFeature.Apply(form.DesignMdiController, form.DesignDockManager);
+                form.OpenReport(tool.Report);
+
+                var fieldListPanel = (FieldListDockPanel)form.DesignDockManager[DesignDockPanelType.FieldList];
+                var fieldList = (DataSourceNativeTreeList)fieldListPanel.GetFieldList();
+                fieldList.SelectDataMemberNode(dataSource, dataMember);
+                fieldList.Selection.Set(new[] { fieldList.FocusedNode });
+
+                var menuCommandService = form.DesignMdiController.ActiveDesignPanel.GetService<IMenuCommandService>();
+                menuCommandService.GlobalInvoke(SummaryFieldsFeature.AddSummaryFieldCommand);
+                Assert.That(tool.Report.CalculatedFields.Count, Is.EqualTo(1));
             }
         }
 
