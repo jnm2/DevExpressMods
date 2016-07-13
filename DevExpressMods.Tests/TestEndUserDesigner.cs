@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -9,6 +8,7 @@ using DevExpress.XtraReports.Native;
 using DevExpress.XtraReports.UI;
 using DevExpress.XtraReports.UserDesigner;
 using DevExpressMods.Features;
+using DevExpressMods.XtraReports;
 using NUnit.Framework;
 
 namespace DevExpressMods.Tests
@@ -46,6 +46,50 @@ namespace DevExpressMods.Tests
 
                 return (MenuItemDescriptionCollection)typeof(DataSourceNativeTreeList).GetMethod("CreateMenuItems", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(fieldList,
                     new[] { fieldList.PickManager.FindDataMemberNode(fieldList.Nodes, dataSource, dataMember) });
+            }
+        }
+
+
+        [Test, Apartment(ApartmentState.STA)]
+        public void Summary_field_should_have_correct_icon_on_ribbon_designer()
+        {
+            const string summaryFieldName = "SummaryField";
+            Assert.That(
+                GetFieldListIcon(typeof(TestDataSource), $"{nameof(TestDataSource.Items)}.{summaryFieldName}", new CalculatedField[]
+                {
+                    new SummaryField { DataMember = nameof(TestDataSource.Items), Name = summaryFieldName }
+                }, true),
+                Is.EqualTo(CustomFieldListImageProviderFeature.Instance.FieldListSumIndex));
+        }
+
+        [Test, Apartment(ApartmentState.STA)]
+        public void Summary_field_should_have_correct_icon_on_old_designer()
+        {
+            const string summaryFieldName = "SummaryField";
+            Assert.That(
+                GetFieldListIcon(typeof(TestDataSource), $"{nameof(TestDataSource.Items)}.{summaryFieldName}", new CalculatedField[]
+                {
+                    new SummaryField { DataMember = nameof(TestDataSource.Items), Name = summaryFieldName }
+                }, false),
+                Is.EqualTo(CustomFieldListImageProviderFeature.Instance.FieldListSumIndex));
+        }
+
+        private static int GetFieldListIcon(Type dataSourceType, string dataMember, CalculatedField[] calculatedFields, bool ribbonForm)
+        {
+            var dataSource = new BindingSource { DataSource = dataSourceType };
+
+            using (var report = new XtraReport { DataSource = dataSource })
+            using (var tool = new ReportDesignTool(report))
+            {
+                report.CalculatedFields.AddRange(calculatedFields);
+
+                var form = ribbonForm ? tool.DesignRibbonForm : tool.DesignForm;
+                SummaryFieldsFeature.Apply(form.DesignMdiController, form.DesignDockManager);
+                form.OpenReport(tool.Report);
+
+                var fieldListPanel = (FieldListDockPanel)form.DesignDockManager[DesignDockPanelType.FieldList];
+                var fieldList = (DataSourceNativeTreeList)fieldListPanel.GetFieldList();
+                return ((DataMemberListNode)fieldList.PickManager.FindDataMemberNode(fieldList.Nodes, dataSource, dataMember)).StateImageIndex;
             }
         }
     }
