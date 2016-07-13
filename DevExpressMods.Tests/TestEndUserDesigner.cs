@@ -44,7 +44,7 @@ namespace DevExpressMods.Tests
                 form.OpenReport(tool.Report);
 
                 var fieldListPanel = (FieldListDockPanel)form.DesignDockManager[DesignDockPanelType.FieldList];
-                var fieldList = (DataSourceNativeTreeList)fieldListPanel.GetFieldList();
+                var fieldList = (XRDesignFieldList)fieldListPanel.DesignControl;
 
                 return (MenuItemDescriptionCollection)typeof(DataSourceNativeTreeList).GetMethod("CreateMenuItems", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(fieldList,
                     new[] { fieldList.PickManager.FindDataMemberNode(fieldList.Nodes, dataSource, dataMember) });
@@ -75,7 +75,7 @@ namespace DevExpressMods.Tests
                 form.OpenReport(tool.Report);
 
                 var fieldListPanel = (FieldListDockPanel)form.DesignDockManager[DesignDockPanelType.FieldList];
-                var fieldList = (DataSourceNativeTreeList)fieldListPanel.GetFieldList();
+                var fieldList = (XRDesignFieldList)fieldListPanel.DesignControl;
                 fieldList.SelectDataMemberNode(dataSource, dataMember);
                 fieldList.Selection.Set(new[] { fieldList.FocusedNode });
 
@@ -124,7 +124,7 @@ namespace DevExpressMods.Tests
                 form.OpenReport(tool.Report);
 
                 var fieldListPanel = (FieldListDockPanel)form.DesignDockManager[DesignDockPanelType.FieldList];
-                var fieldList = (DataSourceNativeTreeList)fieldListPanel.GetFieldList();
+                var fieldList = (XRDesignFieldList)fieldListPanel.DesignControl;
                 return ((DataMemberListNode)fieldList.PickManager.FindDataMemberNode(fieldList.Nodes, dataSource, dataMember)).StateImageIndex;
             }
         }

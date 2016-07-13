@@ -42,7 +42,8 @@ namespace DevExpressMods.Features
 
         private static void RefreshFieldListImages(XRDesignDockManager designDockManager)
         {
-            ((FieldListDockPanel)designDockManager[DesignDockPanelType.FieldList]).GetFieldList().StateImageList = ColumnImageProvider.Instance.CreateImageCollection();
+            var fieldListPanel = (FieldListDockPanel)designDockManager[DesignDockPanelType.FieldList];
+            ((XRDesignFieldList)fieldListPanel.DesignControl).StateImageList = ColumnImageProvider.Instance.CreateImageCollection();
         }
 
 
@@ -67,8 +68,9 @@ namespace DevExpressMods.Features
             private void OnHandleAddSummaryField(object sender, CommandExecuteEventArgs e)
             {
                 var designPanel = designMdiController.ActiveDesignPanel;
-                var fieldListControl = ((FieldListDockPanel)designDockManager[DesignDockPanelType.FieldList]).GetFieldList();
-                var node = fieldListControl.DataMemberNode;
+                var fieldListPanel = (FieldListDockPanel)designDockManager[DesignDockPanelType.FieldList];
+                var fieldList = (XRDesignFieldList)fieldListPanel.DesignControl;
+                var node = fieldList.DataMemberNode;
                 if (node == null) return;
                 if (!node.IsList) node = (DataMemberListNodeBase)node.ParentNode;
 
@@ -111,15 +113,6 @@ namespace DevExpressMods.Features
                         items.Insert(index + 1, new MenuItemDescription("Add Summary Field", null, AddSummaryFieldCommand));
                 }
             }
-        }
-    }    
-
-    public static class FieldListDockPanelExtensions
-    {
-        private readonly static Func<FieldListDockPanel, XRDesignFieldList> get_fieldList = typeof(FieldListDockPanel).GetFieldGetter<Func<FieldListDockPanel, XRDesignFieldList>>("fieldList");
-        public static XRDesignFieldList GetFieldList(this FieldListDockPanel @this)
-        {
-            return get_fieldList(@this.GetFieldList());
         }
     }
 }
