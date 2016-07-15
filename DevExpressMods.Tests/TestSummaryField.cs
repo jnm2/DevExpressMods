@@ -35,7 +35,7 @@ namespace DevExpressMods.Tests
             }));
         }
 
-        private static IReadOnlyList<string> GetPrintedValues(SummaryField testField)
+        private static IList<string> GetPrintedValues(SummaryField testField)
         {
             const string summaryFieldName = "SummaryCalculation";
 

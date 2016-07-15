@@ -17,7 +17,7 @@ Added tests and tweaked code style.</releaseNotes>
         <licenseUrl>https://raw.githubusercontent.com/jnm2/DevExpressMods/master/LICENSE.txt</licenseUrl>
         <tags>DevExpress XtraReports report designer</tags>
         <dependencies>
-          <group targetFramework=".NETFramework4.5" />
+          <group targetFramework=".NETFramework4.0" />
         </dependencies>
     </metadata>
   <files>

@@ -9,14 +9,14 @@ namespace DevExpressMods.Tests
     {
         private sealed class RecursiveStructure
         {
-            public RecursiveStructure(string tag, IReadOnlyCollection<RecursiveStructure> childStructures)
+            public RecursiveStructure(string tag, ICollection<RecursiveStructure> childStructures)
             {
                 Tag = tag;
                 ChildStructures = childStructures;
             }
 
             public string Tag { get; }
-            public IReadOnlyCollection<RecursiveStructure> ChildStructures { get; }
+            public ICollection<RecursiveStructure> ChildStructures { get; }
         }
 
         [Test]
