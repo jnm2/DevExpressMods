@@ -14,6 +14,8 @@ namespace DevExpressMods.Features
 {
     public static class SummaryFieldsFeature
     {
+        public static void Apply(IDesignForm designForm) => Apply(designForm.DesignMdiController, designForm.DesignDockManager);
+
         public static void Apply(XRDesignMdiController designMdiController, XRDesignDockManager designDockManager)
         {
             CustomFieldListImageProviderFeature.Instance.CustomColumnImageIndex -= CustomFieldListImageProviderFeature_CustomColumnImageIndex;
