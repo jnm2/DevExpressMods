@@ -21,7 +21,6 @@ namespace DevExpressMods.XtraReports
 
         public static RelatedListBrowser[] GetChildBrowsers(ReportDataContext dataContext, object dataSource, string parentDataMember, string childDataMember)
         {
-            if (string.IsNullOrEmpty(parentDataMember)) throw new ArgumentException("Parent data member must not be null or empty.", nameof(parentDataMember));
             if (childDataMember.Length <= parentDataMember.Length) return new RelatedListBrowser[0];
 
             var r = new List<RelatedListBrowser>();

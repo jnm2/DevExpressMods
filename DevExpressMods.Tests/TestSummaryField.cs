@@ -10,54 +10,87 @@ namespace DevExpressMods.Tests
     [TestFixture]
     public class TestSummaryField
     {
+        private static object GetDefaultDataSource() => new TestDataSource(new[]
+        {
+            new TestDataSourceItem("Item 1", 1),
+            new TestDataSourceItem("Item 2", 10),
+            new TestDataSourceItem("Item 3", 100)
+        });
+
         [Test]
         public void TestImmediateModeSimple()
         {
-            Assert.That(GetPrintedValues(new SummaryField
-            {
-                Mode = SummaryFieldMode.Immediate,
-                Func = SummaryFunc.Sum
-            }), Has.All.EqualTo("111"));
+            Assert.That(GetPrintedValues(
+                GetDefaultDataSource(),
+                nameof(TestDataSource.Items),
+                new SummaryField
+                {
+                    Name = "SummaryCalculation",
+                    Expression = $"[{nameof(TestDataSourceItem.Value)}]",
+                    DataSource = null,
+                    DataMember = nameof(TestDataSource.Items),
+                    Mode = SummaryFieldMode.Immediate,
+                    Func = SummaryFunc.Sum
+                }), Has.All.EqualTo("111"));
         }
 
         [Test]
         public void TestIncrementalModeSimple()
         {
-            Assert.That(GetPrintedValues(new SummaryField
-            {
-                Mode = SummaryFieldMode.Incremental,
-                Func = SummaryFunc.Sum
-            }), Is.EqualTo(new[]
-            {
-                "1",
-                "11",
-                "111"
-            }));
+            Assert.That(GetPrintedValues(
+                GetDefaultDataSource(),
+                nameof(TestDataSource.Items), 
+                new SummaryField
+                {
+                    Name = "SummaryCalculation",
+                    Expression = $"[{nameof(TestDataSourceItem.Value)}]",
+                    DataSource = null,
+                    DataMember = nameof(TestDataSource.Items),
+                    Mode = SummaryFieldMode.Incremental,
+                    Func = SummaryFunc.Sum
+                }), Is.EqualTo(new[]
+                {
+                    "1",
+                    "11",
+                    "111"
+                }));
         }
 
-        private static IList<string> GetPrintedValues(SummaryField testField)
+        private static object GetDataSourceForEmptyDataMember() => new[]
         {
-            const string summaryFieldName = "SummaryCalculation";
+            new TestDataSourceItem("Item 1", 1),
+            new TestDataSourceItem("Item 2", 10),
+            new TestDataSourceItem("Item 3", 100)
+        };
 
-            testField.Name = summaryFieldName;
-            testField.Expression = $"[{nameof(TestDataSourceItem.Value)}]";
-            testField.DataSource = null;
-            testField.DataMember = nameof(TestDataSource.Items);
+        [Test]
+        public void TestImmediateModeEmptyDataMember()
+        {
+            Assert.That(GetPrintedValues(
+                GetDataSourceForEmptyDataMember(),
+                null,
+                new SummaryField
+                {
+                    Name = "SummaryCalculation",
+                    Expression = $"[{nameof(TestDataSourceItem.Value)}]",
+                    DataSource = null,
+                    DataMember = null,
+                    Mode = SummaryFieldMode.Immediate,
+                    Func = SummaryFunc.Sum
+                }), Has.All.EqualTo("111"));
+        }
 
-            var label = new XRLabel { DataBindings = { { nameof(XRLabel.Text), null, $"{nameof(TestDataSource.Items)}.{summaryFieldName}" } } };
+
+
+        private static IList<string> GetPrintedValues(object dataSource, string dataMember, SummaryField testField)
+        {
+            var label = new XRLabel { DataBindings = { { nameof(XRLabel.Text), null, $"{testField.DataMember}.{testField.Name}" } } };
 
             using (var report = new XtraReport
             {
-                DataSource = new TestDataSource(new[]
-                {
-                    new TestDataSourceItem("Item 1", 1),
-                    new TestDataSourceItem("Item 2", 10),
-                    new TestDataSourceItem("Item 3", 100)
-                }),
-                DataMember = nameof(TestDataSource.Items),
-
+                DataSource = dataSource,
+                DataMember = dataMember,
                 CalculatedFields = { testField },
-
                 Bands = { new DetailBand { Controls = { label } } }
             })
             {
