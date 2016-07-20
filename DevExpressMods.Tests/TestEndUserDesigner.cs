@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -78,9 +77,9 @@ namespace DevExpressMods.Tests
                 var fieldList = (XRDesignFieldList)fieldListPanel.DesignControl;
                 fieldList.SelectDataMemberNode(dataSource, dataMember);
                 fieldList.Selection.Set(new[] { fieldList.FocusedNode });
-
-                var menuCommandService = form.DesignMdiController.ActiveDesignPanel.GetService<IMenuCommandService>();
-                menuCommandService.GlobalInvoke(SummaryFieldsFeature.AddSummaryFieldCommand);
+                
+                var menuCommandService = form.DesignMdiController.ActiveDesignPanel.GetService<IXRMenuCommandService>();
+                menuCommandService.GlobalInvoke(SummaryFieldsFeature.AddSummaryFieldCommand, new object[] { fieldList.FocusedNode });
                 Assert.That(tool.Report.CalculatedFields.Count, Is.EqualTo(1));
             }
         }
