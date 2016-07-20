@@ -70,11 +70,7 @@ namespace DevExpressMods.Features
             private void OnHandleAddSummaryField(object sender, CommandExecuteEventArgs e)
             {
                 var designPanel = designMdiController.ActiveDesignPanel;
-                var fieldListPanel = (FieldListDockPanel)designDockManager[DesignDockPanelType.FieldList];
-                var fieldList = (XRDesignFieldList)fieldListPanel.DesignControl;
-                var node = fieldList.DataMemberNode;
-                if (node == null) return;
-                if (!node.IsList) node = (DataMemberListNodeBase)node.ParentNode;
+                var node = (DataMemberListNodeBase)e.Args[0];
 
                 var report = designPanel.Report;
                 var designerHost = designPanel.GetService<IDesignerHost>();
@@ -112,7 +108,7 @@ namespace DevExpressMods.Features
                 {
                     var index = items.IndexOf(FieldListCommands.AddCalculatedField);
                     if (index != -1)
-                        items.Insert(index + 1, new MenuItemDescription("Add Summary Field", null, AddSummaryFieldCommand));
+                        items.Insert(index + 1, new MenuItemDescription(items[index].Parameter, "Add Summary Field", null, AddSummaryFieldCommand));
                 }
             }
         }
