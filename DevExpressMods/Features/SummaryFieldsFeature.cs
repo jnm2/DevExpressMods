@@ -81,9 +81,9 @@ namespace DevExpressMods.Features
                 var changeServ = designPanel.GetService<IComponentChangeService>();
                 var selectionServ = designPanel.GetService<ISelectionService>();
 
-                // Functionality patterned after AddCalculatedField() from DevExpress.XtraReports.Design.Commands.FieldListCommandExecutor, DevExpress.XtraReports.v14.1.Extensions.dll, Version=14.1.5.0 
+                // Functionality patterned after AddCalculatedField() from DevExpress.XtraReports.Design.Commands.FieldListCommandExecutor, DevExpress.XtraReports.v16.1.Extensions.dll, Version=16.1.4.0 
                 var c = new SummaryField { DataSource = node.DataSource != report.DataSource ? node.DataSource : null, DataMember = node.DataMember ?? string.Empty };
-                var description = $"Add {typeof(SummaryField).Name} object";
+                var description = $"Add {nameof(SummaryField)} object";
                 var transaction = designerHost.CreateTransaction(description);
                 try
                 {
