@@ -25,7 +25,7 @@ Added tests and tweaked code style.</releaseNotes>
     <file src="Readme.md" />
     <file src="add-menu.png" />
     <file src="summary-field-properties.png" />
-    <file src="DevExpressMods\bin\Release\DevExpressMods.dll" target="lib\net45\DevExpressMods.dll" />
-    <file src="DevExpressMods\bin\Release\DevExpressMods.xml" target="lib\net45\DevExpressMods.xml" />
+    <file src="DevExpressMods\bin\Release\DevExpressMods.dll" target="lib\net40\DevExpressMods.dll" />
+    <file src="DevExpressMods\bin\Release\DevExpressMods.xml" target="lib\net40\DevExpressMods.xml" />
   </files>
 </package>
