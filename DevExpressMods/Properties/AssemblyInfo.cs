@@ -7,4 +7,4 @@
 [assembly: AssemblyCopyright("MIT License")]
 
 [assembly: AssemblyVersion("1.0.1.0")]
-[assembly: AssemblyInformationalVersion("1.0.1-rc1")]
+[assembly: AssemblyInformationalVersion("1.0.1")]

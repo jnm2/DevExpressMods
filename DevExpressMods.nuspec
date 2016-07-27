@@ -7,9 +7,7 @@
         <description>This project is a temporary stopgap for DevExpress's lack of support for complex summary calculations, seen here: https://www.devexpress.com/support/center/Question/Details/S133081
 
 If DevExpress produces a solution in the future that covers all these use cases, this solution will be deprecated.</description>
-        <releaseNotes>Fixed #9: SummaryFieldsFeature.Apply does not work with ReportPrintTool
-
-Added tests and tweaked code style.</releaseNotes>
+        <releaseNotes>https://github.com/jnm2/DevExpressMods/releases</releaseNotes>
         <copyright>This project is under the MIT license to maximize your freedom.</copyright>
         <authors>Joseph N. Musser II</authors>
         <language>en-US</language>
