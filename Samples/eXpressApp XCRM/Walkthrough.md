@@ -32,7 +32,7 @@ Install the [DevExpressMods NuGet package](https://www.nuget.org/packages/DevExp
 
  * Right click the `XCRM.Module` project in Solution Explorer and select `Manage NuGet Packages...`
  * Click the Browse tab. In the search bar, type `DevExpressMods` and press enter.
- * Select the DevExpressMods package and install the latest release version, currently [![NuGet](http://img.shields.io/nuget/v/DevExpressMods.svg?maxAge=2592000)](https://www.nuget.org/packages/DevExpressMods/).
+ * Select the DevExpressMods package and install the latest release version, currently [![NuGet](http://img.shields.io/nuget/v/DevExpressMods.svg?maxAge=7200)](https://www.nuget.org/packages/DevExpressMods/).
 
 ## Step 2: Add DevExpress.ExpressApp.ReportsV2.Win reference
 

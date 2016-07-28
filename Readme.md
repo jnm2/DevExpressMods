@@ -1,4 +1,4 @@
-[![NuGet](http://img.shields.io/nuget/v/DevExpressMods.svg?maxAge=2592000)](https://www.nuget.org/packages/DevExpressMods/) [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.txt) [![Join the chat at https://gitter.im/jnm2/DevExpressMods](https://badges.gitter.im/jnm2/DevExpressMods.svg)](https://gitter.im/jnm2/DevExpressMods?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![NuGet](http://img.shields.io/nuget/v/DevExpressMods.svg?maxAge=7200)](https://www.nuget.org/packages/DevExpressMods/) [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE.txt) [![Join the chat at https://gitter.im/jnm2/DevExpressMods](https://badges.gitter.im/jnm2/DevExpressMods.svg)](https://gitter.im/jnm2/DevExpressMods?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 I'm interested in feedback! Let me know what your needs are on [gitter](https://gitter.im/jnm2/DevExpressMods?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or [start a specific issue](https://github.com/jnm2/DevExpressMods/issues).
 
