@@ -17,6 +17,19 @@ namespace DevExpressMods.Tests
     [TestFixture]
     public class TestEndUserDesigner
     {
+        #region Workaround for DevExpress designer crash when ASP is detected and TFS build is erroneously detected as ASP
+
+        [SetUp]
+        public void TestInitialize() => DevExpress.XtraPrinting.Native.PSNativeMethods.SetAspDetector(new AspDetector());
+
+        private sealed class AspDetector : DevExpress.XtraPrinting.Native.PSNativeMethods.IAspDetector
+        {
+            bool DevExpress.XtraPrinting.Native.PSNativeMethods.IAspDetector.AspIsRunning => false;
+        }
+
+        #endregion
+
+
         [Test, Apartment(ApartmentState.STA)]
         public void Add_summary_field_should_be_available_on_ribbon_designer()
         {
@@ -77,7 +90,7 @@ namespace DevExpressMods.Tests
                 var fieldList = (XRDesignFieldList)fieldListPanel.DesignControl;
                 fieldList.SelectDataMemberNode(dataSource, dataMember);
                 fieldList.Selection.Set(new[] { fieldList.FocusedNode });
-                
+
                 var menuCommandService = form.DesignMdiController.ActiveDesignPanel.GetService<IXRMenuCommandService>();
                 menuCommandService.GlobalInvoke(SummaryFieldsFeature.AddSummaryFieldCommand, new object[] { fieldList.FocusedNode });
                 Assert.That(tool.Report.CalculatedFields.Count, Is.EqualTo(1));
