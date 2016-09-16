@@ -103,6 +103,11 @@
     <Compile Include="Design\MenuCreationServiceContainer.cs" />
     <Compile Include="Features\CustomColumnImageIndexEventArgs.cs" />
     <Compile Include="InvalidEnumValueException.cs" />
+    <Compile Include="LocalizableNames.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LocalizableNames.resx</DependentUpon>
+    </Compile>
     <Compile Include="ModdedEndUserDesigner.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -120,6 +125,10 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="XtraReports\SummaryFieldMode.cs" />
+    <EmbeddedResource Include="LocalizableNames.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>LocalizableNames.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

@@ -15,7 +15,7 @@ using DevExpressMods.Design;
 
 namespace DevExpressMods.XtraReports
 {
-    [DXDisplayName(typeof(SummaryField), "LocalizableNames", "DevExpressMods.XtraReports.SummaryField", "Summary Field")]
+    [DXDisplayName(typeof(LocalizableNames), nameof(LocalizableNames), "DevExpressMods.XtraReports.SummaryField", "Summary Field")]
     public class SummaryField : CalculatedField
     {
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
