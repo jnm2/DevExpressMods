@@ -161,5 +161,40 @@ namespace DevExpressMods.Tests
                 Assert.That(GetPrintedInstances(report, label), Has.All.EqualTo("22"));
             }
         }
+        
+
+
+        [Test]
+        public void Filtering_by_summary_field()
+        {
+            var testField = new SummaryField
+            {
+                Name = "SummaryCalculation",
+                Expression = $"[{nameof(TestDataSourceItem.Value)}]",
+                DataMember = nameof(TestDataSource.Items),
+                Mode = SummaryFieldMode.Immediate,
+                Func = SummaryFunc.Avg,
+                FieldType = FieldType.Int32
+            };
+
+            var label = new XRLabel { DataBindings = { { nameof(XRLabel.Text), null, $"{nameof(TestDataSource.Items)}.{nameof(TestDataSourceItem.Value)}" } } };
+
+            using (var report = new XtraReport
+            {
+                DataSource = new BindingSource { DataSource = GetDefaultDataSource() },
+                DataMember = nameof(TestDataSource.Items),
+                CalculatedFields = { testField },
+                Bands = { new DetailBand { Controls = { label } } },
+                FilterString = $"[{nameof(TestDataSourceItem.Value)}] < [{testField.Name}]"
+            })
+            {
+                report.CreateDocument();
+                Assert.That(GetPrintedInstances(report, label), Is.EqualTo(new[]
+                {
+                    "1",
+                    "10"
+                }));
+            }
+        }
     }
 }

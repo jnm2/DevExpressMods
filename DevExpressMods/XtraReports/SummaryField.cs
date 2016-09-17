@@ -2,6 +2,7 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Drawing.Design;
+using System.Globalization;
 using System.Linq;
 using DevExpress.Data;
 using DevExpress.Data.Browsing;
@@ -331,7 +332,7 @@ namespace DevExpressMods.XtraReports
                 }
             }
 
-            immediateSummary = get_ValuesInfo(summary).Cast<Pair<object, int>>().All(p => p.First == null) ? null : summary.GetResult();
+            immediateSummary = GetCurrentSummaryResult();
             isImmediateSummaryValid = true;
             return immediateSummary;
         }
@@ -409,7 +410,21 @@ namespace DevExpressMods.XtraReports
                 AddSummaryValue(expressionEvaluator.Evaluate(listController.GetItem(lastPosition)), lastPosition);
             }
 
-            return get_ValuesInfo(summary).Cast<Pair<object, int>>().All(p => p.First == null) ? null : summary.GetResult();
+            return GetCurrentSummaryResult();
+        }
+
+        private object GetCurrentSummaryResult()
+        {
+            return get_ValuesInfo(summary).Cast<Pair<object, int>>().All(p => p.First == null) ? null :
+                ConvertToType(summary.GetResult(), FieldTypeConverter.ToType(FieldType));
+        }
+
+        // Copied from DevExpress.Data.Browsing.CalculatedPropertyDescriptorBase.ConvertToType, DevExpress.Data.v16.1, Version=16.1.6.0
+        private static object ConvertToType(object value, Type type)
+        {
+            if (value == null || type == typeof(object)) return value;
+            if (type == typeof(string) && !(value is IConvertible)) return Convert.ToString(value, CultureInfo.CurrentCulture);
+            return Convert.ChangeType(value, type, CultureInfo.CurrentCulture);
         }
 
         private void AddSummaryValue(object value, int position)
