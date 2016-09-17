@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Windows.Forms;
 using DevExpress.XtraPrinting;
-using DevExpress.XtraPrinting.Preview;
 using DevExpress.XtraReports.UI;
 using DevExpressMods.XtraReports;
 using NUnit.Framework;
@@ -181,7 +176,7 @@ namespace DevExpressMods.Tests
 
             using (var report = new XtraReport
             {
-                DataSource = new BindingSource { DataSource = GetDefaultDataSource() },
+                DataSource = GetDefaultDataSource(),
                 DataMember = nameof(TestDataSource.Items),
                 CalculatedFields = { testField },
                 Bands = { new DetailBand { Controls = { label } } },
