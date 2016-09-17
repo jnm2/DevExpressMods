@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using DevExpress.XtraPrinting;
 using DevExpress.XtraReports.UI;
 using DevExpressMods.XtraReports;
@@ -215,6 +216,45 @@ namespace DevExpressMods.Tests
                 DataMember = nameof(TestDataSource.Items),
                 CalculatedFields = { testField },
                 Bands = { new DetailBand { Controls = { label } } }
+            })
+            {
+                report.CreateDocument();
+                Assert.That(GetPrintedInstances(report, label), Has.All.EqualTo("111"));
+            }
+        }
+
+
+
+        [Test]
+        public void Running_with_parent_with_blank_data_member()
+        {
+            var testField = new SummaryField
+            {
+                Name = "SummaryCalculation",
+                Expression = $"[{nameof(TestDataSourceItem.Value)}]",
+                DataMember = nameof(TestDataSource.Items),
+                Mode = SummaryFieldMode.Immediate,
+                Func = SummaryFunc.Sum
+            };
+
+            var label = new XRLabel { DataBindings = { { nameof(XRLabel.Text), null, $"{nameof(TestDataSource.Items)}.{testField.Name}" } } };
+            var dataSource = new BindingSource { DataSource = GetDefaultDataSource() };
+
+            using (var report = new XtraReport
+            {
+                DataSource = dataSource,
+                DataMember = "",
+                CalculatedFields = { testField },
+                Bands =
+                {
+                    new DetailBand(),
+                    new DetailReportBand
+                    {
+                        DataSource = dataSource,
+                        DataMember = nameof(TestDataSource.Items),
+                        Bands = { new DetailBand { Controls = { label } } }
+                    }
+                }
             })
             {
                 report.CreateDocument();

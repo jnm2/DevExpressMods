@@ -232,7 +232,7 @@ namespace DevExpressMods.XtraReports
             {
                 if (dg.Value.DataSource != (DataSource ?? report.DataSource))
                     throw new EndUserConfigurationException($"The running band on summary field {Name} does not have the same data source as the summary field. Otherwise, it is not able to be correlated with the summary field.");
-                if (!DataMemberUtils.AreEqual(DataMember, dg.Value.DataMember) && (!DataMemberUtils.IsAncestor(dg.Value.DataMember, DataMember) || string.IsNullOrEmpty(dg.Value.DataMember)))
+                if (!DataMemberUtils.AreEqual(DataMember, dg.Value.DataMember) && !DataMemberUtils.IsAncestor(dg.Value.DataMember, DataMember))
                     throw new EndUserConfigurationException($"The running band on summary field {Name} must have the same data member or must be a parent data member. Otherwise, it is not able to be correlated with the summary field.");
 
                 var groupListBrowser = dg.Value.ListBrowser;
