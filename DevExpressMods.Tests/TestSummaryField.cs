@@ -1,6 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
 using DevExpress.XtraPrinting;
+using DevExpress.XtraPrinting.Preview;
 using DevExpress.XtraReports.UI;
 using DevExpressMods.XtraReports;
 using NUnit.Framework;
@@ -96,11 +101,64 @@ namespace DevExpressMods.Tests
             {
                 report.CreateDocument();
 
-                return report.PrintingSystem.Document.Pages.SelectMany(_ => _.InnerBricks).SelectManyRecursive(_ => (_ as CompositeBrick)?.InnerBricks)
-                    .OfType<LabelBrick>()
-                    .Where(_ => _.BrickOwner == label)
-                    .Select(_ => _.Text)
-                    .ToList();
+                return GetPrintedInstances(report, label);
+            }
+        }
+
+        private static List<string> GetPrintedInstances(XtraReport report, XRControl label)
+        {
+            return report.PrintingSystem.Document.Pages.SelectMany(_ => _.InnerBricks).SelectManyRecursive(_ => (_ as CompositeBrick)?.InnerBricks)
+                .OfType<LabelBrick>()
+                .Where(_ => _.BrickOwner == label)
+                .Select(_ => _.Text)
+                .ToList();
+        }
+
+
+
+        [Test, Timeout(2000)]
+        public void Immediate_empty_child_collection_grouping_by_parent()
+        {
+            var testField = new SummaryField
+            {
+                Name = "SummaryCalculation",
+                Expression = $"[{nameof(TestDataSourceItem.Value)}]",
+                DataMember = $"{nameof(TestDataSource.Items)}.{nameof(TestDataSourceItem.RecursiveItems)}",
+                Mode = SummaryFieldMode.Immediate,
+                Func = SummaryFunc.Sum
+            };
+
+            var label = new XRLabel { DataBindings = { { nameof(XRLabel.Text), null, $"{testField.DataMember}.{testField.Name}" } } };
+            var dataSource = new TestDataSource(new[]
+            {
+                new TestDataSourceItem("Item 1", 1),
+                new TestDataSourceItem("Item 2", 10, new[]
+                {
+                    new TestDataSourceItem("Item 2.1", 2),
+                    new TestDataSourceItem("Item 2.2", 20)
+                })
+            });
+
+            using (var report = new XtraReport
+            {
+                DataSource = dataSource,
+                DataMember = nameof(TestDataSource.Items),
+                CalculatedFields = { testField },
+                Bands =
+                {
+                    new DetailBand(),
+                    new DetailReportBand
+                    {
+                        DataSource = dataSource,
+                        DataMember = $"{nameof(TestDataSource.Items)}.{nameof(TestDataSourceItem.RecursiveItems)}",
+                        Bands = { new DetailBand { Controls = { label } } },
+                        ReportPrintOptions = { DetailCountOnEmptyDataSource = 0 }
+                    }
+                }
+            })
+            {
+                report.CreateDocument();
+                Assert.That(GetPrintedInstances(report, label), Has.All.EqualTo("22"));
             }
         }
     }

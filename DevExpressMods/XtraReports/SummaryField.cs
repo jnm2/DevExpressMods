@@ -308,14 +308,14 @@ namespace DevExpressMods.XtraReports
                                 AddSummaryValue(expressionEvaluator.Evaluate(currentBrowser.Current), sampleIndex);
                             sampleIndex++;
 
-                            while (currentIndex > 0 && currentBrowser.Position == currentBrowser.Count - 1)
+                            while (currentIndex > 0 && currentBrowser.Position >= currentBrowser.Count - 1)
                             {
                                 currentBrowser.Position = 0;
                                 currentIndex--;
                                 currentBrowser = childBrowsers[currentIndex];
                             }
 
-                            if (currentBrowser.Position == currentBrowser.Count - 1)
+                            if (currentBrowser.Position >= currentBrowser.Count - 1)
                             {
                                 if (groupListBrowser.Position == groupStart + groupRowCount - 1) break;
                                 groupListBrowser.Position++;
