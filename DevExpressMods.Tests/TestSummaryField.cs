@@ -191,5 +191,35 @@ namespace DevExpressMods.Tests
                 }));
             }
         }
+
+
+
+        [Test]
+        public void Overriding_filter_when_parent_data_member_is_blank()
+        {
+            var testField = new SummaryField
+            {
+                Name = "SummaryCalculation",
+                Expression = $"[{nameof(TestDataSourceItem.Value)}]",
+                DataMember = nameof(TestDataSource.Items),
+                Mode = SummaryFieldMode.Immediate,
+                Func = SummaryFunc.Sum,
+                OverrideFilter = "True"
+            };
+
+            var label = new XRLabel { DataBindings = { { nameof(XRLabel.Text), null, $"{nameof(TestDataSource.Items)}.{testField.Name}" } } };
+
+            using (var report = new XtraReport
+            {
+                DataSource = GetDefaultDataSource(),
+                DataMember = nameof(TestDataSource.Items),
+                CalculatedFields = { testField },
+                Bands = { new DetailBand { Controls = { label } } }
+            })
+            {
+                report.CreateDocument();
+                Assert.That(GetPrintedInstances(report, label), Has.All.EqualTo("111"));
+            }
+        }
     }
 }

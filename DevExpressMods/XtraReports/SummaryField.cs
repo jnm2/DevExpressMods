@@ -249,7 +249,7 @@ namespace DevExpressMods.XtraReports
                     var newListController = new CustomSortedListController();
                     newListController.SetList(originalBrowser.List);
                     var newBrowser = originalBrowserAsChild != null
-                        ? (ListBrowser)new CustomRelatedListBrowser((DataBrowser)originalBrowserAsChild.Parent, originalBrowserAsChild.RelatedProperty, newListController, false)
+                        ? (ListBrowser)new CustomRelatedListBrowser(originalBrowser.Parent, originalBrowserAsChild.RelatedProperty, newListController, false)
                         : new CustomListBrowser(originalBrowser.DataSource, newListController, false);
                     ((IPropertiesContainer)newBrowser).SetCustomProperties(originalBrowser.GetItemProperties().OfType<CalculatedPropertyDescriptorBase>().Cast<PropertyDescriptor>().ToArray());
                     newListController.SetBrowser(newBrowser);
