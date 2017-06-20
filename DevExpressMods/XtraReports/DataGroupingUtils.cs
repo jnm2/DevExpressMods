@@ -63,7 +63,7 @@ namespace DevExpressMods.XtraReports
         It's more efficient simply to copy the logic, tracing what we need, but this makes us slightly more dependent on DevExpress's implementation details. We're so dependent already with SummaryField that we may as well go for efficiency.
         */
         private static readonly Func<GroupField, Band> get_Band = typeof(GroupField).GetMethodDelegate<Func<GroupField, Band>>("get_Band");
-        private static readonly Func<SortedListController, GroupField[]> get_originalGroupFields = typeof(SortedListController).GetFieldGetter<Func<SortedListController, GroupField[]>>("originalGroupFields");
+        private static readonly Func<SortedListController, IGroupField[]> get_originalGroupFields = typeof(SortedListController).GetFieldGetter<Func<SortedListController, IGroupField[]>>("originalGroupFields");
         private struct ComposedGroupFieldInfo
         {
             public GroupField GroupField { get; }
@@ -83,7 +83,7 @@ namespace DevExpressMods.XtraReports
             var composedFields = new List<ComposedGroupFieldInfo>();
             var lastBand = (GroupHeaderBand)null;
             var lastCountWithNonNullLevel = 0;
-            foreach (var field in get_originalGroupFields.Invoke(controller))
+            foreach (GroupField field in get_originalGroupFields.Invoke(controller))
             {
                 var headerBand = get_Band.Invoke(field) as GroupHeaderBand;
                 if (headerBand == null)

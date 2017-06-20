@@ -19,8 +19,8 @@ namespace DevExpressMods.XtraReports
             return get_IndicesMapper(listController);
         }
 
-        private static readonly Func<SortedListController, GroupField[]> get_originalGroupFields = typeof(SortedListController).GetFieldGetter<Func<SortedListController, GroupField[]>>("originalGroupFields");
-        public static GroupField[] GetOriginalGroupFields(this SortedListController listController)
+        private static readonly Func<SortedListController, IGroupField[]> get_originalGroupFields = typeof(SortedListController).GetFieldGetter<Func<SortedListController, IGroupField[]>>("originalGroupFields");
+        public static IGroupField[] GetOriginalGroupFields(this SortedListController listController)
         {
             return get_originalGroupFields(listController);
         }
