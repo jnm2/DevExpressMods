@@ -1,48 +1,30 @@
 #tool NUnit.ConsoleRunner
 
-
 var target = Argument("target", "Test");
 var configuration = Argument("configuration", "Release");
-var platform = Argument("platform", "Any CPU");
-
-var buildProject = File("DevExpressMods.sln");
-
+var binDir = Directory($"DevExpressMods/bin/{configuration}/net40");
+var pubDir = Directory("pub");
 
 Task("Clean")
-    .Does(() =>
-{
-    MSBuild(buildProject, settings => settings.SetConfiguration(configuration).WithTarget("clean"));
-});
+    .Does(() => CleanDirectory(binDir));
 
 Task("Restore")
     .IsDependentOn("Clean")
-    .Does(() =>
-{
-    MSBuild(buildProject, settings => settings.SetConfiguration(configuration).WithTarget("restore"));
-});
+    .Does(() => MSBuild(".", new MSBuildSettings().SetConfiguration(configuration).WithTarget("Restore")));
 
 Task("Build")
     .IsDependentOn("Restore")
-    .Does(() =>
-{
-    MSBuild(buildProject, settings => settings.SetConfiguration(configuration));
-});
+    .Does(() => MSBuild(".", new MSBuildSettings().SetConfiguration(configuration).WithTarget("Build")));
 
 Task("Test")
     .IsDependentOn("Build")
-    .Does(() =>
-{
-    NUnit3(GetFiles("**/bin/" + configuration + "/**/*tests*.dll"), new NUnit3Settings { NoResults = true });
-});
+    .Does(() => NUnit3(GetFiles($"**/bin/{configuration}/**/*tests*.dll"), new NUnit3Settings { NoResults = true }));
 
 Task("Pack")
     .IsDependentOn("Test")
-    .Does(() =>
-{
-    var version = System.Diagnostics.FileVersionInfo.GetVersionInfo("DevExpressMods/bin/Release/net40/DevExpressMods.dll").ProductVersion;
-    NuGetPack("DevExpressMods.nuspec", new NuGetPackSettings { Version = version });
-});
-
-
+    .Does(() => MSBuild("DevExpressMods", new MSBuildSettings()
+        .SetConfiguration(configuration)
+        .WithTarget("Pack")
+        .WithProperty("PackageOutputPath", System.IO.Path.GetFullPath(pubDir))));
 
 RunTarget(target);
