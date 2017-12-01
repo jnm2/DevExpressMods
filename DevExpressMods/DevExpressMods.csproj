@@ -4,6 +4,7 @@
     <TargetFramework>net40</TargetFramework>
     <DocumentationFile>bin\Debug\net40\DevExpressMods.xml</DocumentationFile>
     <NoWarn>CS1591</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
     <Version>1.1.0</Version>
     <Authors>Joseph N. Musser II</Authors>
