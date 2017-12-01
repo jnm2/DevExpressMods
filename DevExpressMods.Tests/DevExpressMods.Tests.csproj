@@ -10,7 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DevExpressMods\DevExpressMods.csproj" />
 
-    <PackageReference Include="DevExpress.Win.Reporting" Version="17.1.3" />
+    <PackageReference Include="DevExpress.Win.Reporting" Version="17.2.3" />
     <PackageReference Include="NUnit" Version="3.7.1" />
 
     <Reference Include="System.Windows.Forms" />
