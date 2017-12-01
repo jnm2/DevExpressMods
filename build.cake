@@ -39,7 +39,7 @@ Task("Pack")
     .IsDependentOn("Test")
     .Does(() =>
 {
-    var version = System.Diagnostics.FileVersionInfo.GetVersionInfo("DevExpressMods/bin/Release/DevExpressMods.dll").ProductVersion;
+    var version = System.Diagnostics.FileVersionInfo.GetVersionInfo("DevExpressMods/bin/Release/net40/DevExpressMods.dll").ProductVersion;
     NuGetPack("DevExpressMods.nuspec", new NuGetPackSettings { Version = version });
 });
 
