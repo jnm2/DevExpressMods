@@ -309,7 +309,7 @@ namespace DevExpressMods
         /// </summary>
         /// <typeparam name="TSignature">The signature of the method and the type of the returned delegate.</typeparam>
         /// <param name="type">The type that declares the method.</param>
-        /// <param name="methodName">The name of the method (case-sensitive).</param>
+        /// <param name="fieldName">The name of the field (case-sensitive).</param>
         public static TSignature GetFieldGetter<TSignature>(this Type type, string fieldName) where TSignature : class
         {
             var invokeMethod = typeof(TSignature).GetMethod("Invoke");

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.Globalization;
@@ -8,9 +9,9 @@ using DevExpress.Data;
 using DevExpress.Data.Browsing;
 using DevExpress.Data.Filtering;
 using DevExpress.Data.Filtering.Helpers;
-using DevExpress.XtraPrinting.Native;
 using DevExpress.XtraReports.Native.Data;
 using DevExpress.XtraReports.Native.Parameters;
+using DevExpress.XtraReports.Summary.Native;
 using DevExpress.XtraReports.UI;
 using DevExpressMods.Design;
 
@@ -22,7 +23,7 @@ namespace DevExpressMods.XtraReports
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public new GetValueEventHandler GetValue;
 
-        private readonly XRSummary summary;
+        private readonly List<object> currentSummaryValues = new List<object>();
         private int lastPosition = -1;
         private object lastCollection;
         private ExpressionEvaluator expressionEvaluator;
@@ -37,10 +38,10 @@ namespace DevExpressMods.XtraReports
         public new CalculatedFieldScripts Scripts => null;
 
         [Category("Data"), DefaultValue(typeof(SummaryFunc), nameof(SummaryFunc.Sum))]
-        public SummaryFunc Func { get { return summary.Func; } set { summary.Func = value; } }
+        public SummaryFunc Func { get; set; }
 
         [Category("Data"), DefaultValue(false), DisplayName("Ignore Null Values")]
-        public bool IgnoreNullValues { get { return summary.IgnoreNullValues; } set { summary.IgnoreNullValues = value; } }
+        public bool IgnoreNullValues { get; set; }
 
         [Category("Data"), DefaultValue(null), TypeConverter(typeof(RunningBandConverter))]
         public Band Running { get; set; }
@@ -63,20 +64,14 @@ namespace DevExpressMods.XtraReports
 
         public SummaryField()
         {
-            summary = new XRSummary();
-            set_Control(summary, new XRLabel());
             base.GetValue += SummaryField_GetValue;
         }
 
 
 
 
-        private static readonly Action<XRSummary, object, int> addValue = typeof(XRSummary).GetMethodDelegate<Action<XRSummary, object, int>>("AddValue");
-        private static readonly Action<XRSummary> reset = typeof(XRSummary).GetMethodDelegate<Action<XRSummary>>("Reset");
-        private static readonly Func<XRSummary, IEnumerable> get_ValuesInfo = typeof(XRSummary).GetMethodDelegate<Func<XRSummary, IEnumerable>>("get_ValuesInfo");
         private static readonly Func<XtraReportBase, ReportDataContext> get_DataContext = typeof(XtraReportBase).GetMethodDelegate<Func<XtraReportBase, ReportDataContext>>("get_DataContext");
         private static readonly Func<XtraReportBase, string, CriteriaOperator> GetFilterCriteria = typeof(XtraReportBase).GetMethodDelegate<Func<XtraReportBase, string, CriteriaOperator>>("GetFilterCriteria");
-        private static readonly Action<XRSummary, XRLabel> set_Control = typeof(XRSummary).GetMethodDelegate<Action<XRSummary, XRLabel>>("set_Control");
 
         private sealed class CustomSortedListController : SortedListController
         {
@@ -219,7 +214,7 @@ namespace DevExpressMods.XtraReports
             }
 
 
-            reset(summary);
+            currentSummaryValues.Clear();
 
             var dg = GetCurrentDataGroup(dataContext, Running ?? report);
 
@@ -289,7 +284,7 @@ namespace DevExpressMods.XtraReports
                     {
                         var currentRow = groupListBrowser.GetRow(i + groupStart);
                         if (!isOverridingFilter || ConvertOverrideFilterResult(overrideFilterEvaluator.Evaluate(currentRow)))
-                            AddSummaryValue(expressionEvaluator.Evaluate(currentRow), i);
+                            AddSummaryValue(expressionEvaluator.Evaluate(currentRow));
                     }
                 }
                 else
@@ -306,7 +301,7 @@ namespace DevExpressMods.XtraReports
                             var currentIndex = childBrowsers.Length - 1;
                             var currentBrowser = childBrowsers[currentIndex];
                             if (!isOverridingFilter || ConvertOverrideFilterResult(overrideFilterEvaluator.Evaluate(currentBrowser.Current)))
-                                AddSummaryValue(expressionEvaluator.Evaluate(currentBrowser.Current), sampleIndex);
+                                AddSummaryValue(expressionEvaluator.Evaluate(currentBrowser.Current));
                             sampleIndex++;
 
                             while (currentIndex > 0 && currentBrowser.Position >= currentBrowser.Count - 1)
@@ -407,7 +402,7 @@ namespace DevExpressMods.XtraReports
                 lastPosition++;
                 if (expressionEvaluator == null)
                     expressionEvaluator = new ExpressionEvaluator(new CalculatedEvaluatorContextDescriptor(report.Parameters, this, dataContext), CriteriaOperator.TryParse(Expression));
-                AddSummaryValue(expressionEvaluator.Evaluate(listController.GetItem(lastPosition)), lastPosition);
+                AddSummaryValue(expressionEvaluator.Evaluate(listController.GetItem(lastPosition)));
             }
 
             return GetCurrentSummaryResult();
@@ -415,8 +410,8 @@ namespace DevExpressMods.XtraReports
 
         private object GetCurrentSummaryResult()
         {
-            return get_ValuesInfo(summary).Cast<Pair<object, int>>().All(p => p.First == null) ? null :
-                ConvertToType(summary.GetResult(), FieldTypeConverter.ToType(FieldType));
+            return currentSummaryValues.All(value => value == null) ? null :
+                ConvertToType(new SummaryHelper(treatStringsAsNumerics: true).CalcResult(Func, currentSummaryValues), FieldTypeConverter.ToType(FieldType));
         }
 
         // Copied from DevExpress.Data.Browsing.CalculatedPropertyDescriptorBase.ConvertToType, DevExpress.Data.v16.1, Version=16.1.6.0
@@ -427,10 +422,10 @@ namespace DevExpressMods.XtraReports
             return Convert.ChangeType(value, type, CultureInfo.CurrentCulture);
         }
 
-        private void AddSummaryValue(object value, int position)
+        private void AddSummaryValue(object value)
         {
             if (IgnoreNullValues && (value ?? DBNull.Value) == DBNull.Value) return;
-            addValue(summary, value, position);
+            currentSummaryValues.Add(value);
         }
 
         private void SummaryField_GetValue(object sender, GetValueEventArgs e)
@@ -467,7 +462,7 @@ namespace DevExpressMods.XtraReports
         {
             unfilteredListController = null;
             unfilteredListControllerList = null;
-            reset(summary);
+            currentSummaryValues.Clear();
         }
     }
 }

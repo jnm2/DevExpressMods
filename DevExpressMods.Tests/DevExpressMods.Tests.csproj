@@ -9,31 +9,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DevExpressMods\DevExpressMods.csproj" />
-  </ItemGroup>
 
-  <ItemGroup>
+    <PackageReference Include="DevExpress.Win.Reporting" Version="17.2.3" />
     <PackageReference Include="NUnit" Version="3.7.1" />
-  </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="DevExpress.Data.v17.1" />
-    <Reference Include="DevExpress.Printing.v17.1.Core" />
-    <Reference Include="DevExpress.Utils.v17.1" />
-    <Reference Include="DevExpress.Utils.v17.1.UI" />
-    <Reference Include="DevExpress.XtraBars.v17.1" />
-    <Reference Include="DevExpress.XtraEditors.v17.1" />
-    <Reference Include="DevExpress.XtraPrinting.v17.1" />
-    <Reference Include="DevExpress.XtraReports.v17.1" />
-    <Reference Include="DevExpress.XtraReports.v17.1.Extensions" />
-    <Reference Include="DevExpress.XtraTreeList.v17.1" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
-
-
-
-  <!-- Workaround for https://github.com/dotnet/roslyn-project-system/issues/1739 -->
-  <PropertyGroup>
-    <AssemblySearchPaths>$(AssemblySearchPaths);{GAC}</AssemblySearchPaths>
-  </PropertyGroup>
 
 </Project>
