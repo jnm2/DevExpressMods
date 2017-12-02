@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
@@ -6,10 +6,10 @@
     <NoWarn>CS1591</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Authors>Joseph N. Musser II</Authors>
     <Copyright>Copyright © Joseph N. Musser II</Copyright>
-    <Description>Supports DevExpress XtraReports 17.2.0–17.2.3
+    <Description>Supports DevExpress XtraReports 17.2.4+ and hotfixes of 17.2.3
 This project is now on track to be deprecated. What you need to know: https://github.com/jnm2/DevExpressMods/issues/23
 
 Kudos to DevExpress for doing the right thing and providing a first-class experience! That was the goal I was hoping for when I went public with this project. Perhaps it made a difference. 🎉</Description>
