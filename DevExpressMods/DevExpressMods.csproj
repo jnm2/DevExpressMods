@@ -6,12 +6,13 @@
     <NoWarn>CS1591</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Authors>Joseph N. Musser II</Authors>
     <Copyright>Copyright © Joseph N. Musser II</Copyright>
-    <Description>This project is a temporary stopgap for DevExpress's lack of support for complex summary calculations, seen here: https://www.devexpress.com/support/center/Question/Details/S133081
+    <Description>Supports DevExpress XtraReports 17.2.0–17.2.3
+This project is now on track to be deprecated. What you need to know: https://github.com/jnm2/DevExpressMods/issues/23
 
-If DevExpress produces a solution in the future that covers all these use cases, this solution will be deprecated.</Description>
+Kudos to DevExpress for doing the right thing and providing a first-class experience! That was the goal I was hoping for when I went public with this project. Perhaps it made a difference. 🎉</Description>
     <PackageReleaseNotes>https://github.com/jnm2/DevExpressMods/releases</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/jnm2/DevExpressMods</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/jnm2/DevExpressMods/blob/master/LICENSE.txt</PackageLicenseUrl>
