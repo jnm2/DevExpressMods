@@ -40,6 +40,11 @@ namespace DevExpressMods.Features
                 return r;
             }
 
+            public SvgImageCollection CreateSvgImageCollection()
+            {
+                return wrapped.CreateSvgImageCollection();
+            }
+
             public int GetColumnImageIndex(PropertyDescriptor property, TypeSpecifics specifics)
             {
                 var r = wrapped.GetColumnImageIndex(property, specifics);
